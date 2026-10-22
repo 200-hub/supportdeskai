@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -11,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -22,6 +22,7 @@ export const LoginScreen = ({
   onNavigateToRegister,
   onNavigateBack,
 }) => {
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('sarah.connor@cyberdyne.org');
   const [password, setPassword] = useState('Password123!');
   const [rememberMe, setRememberMe] = useState(true);
@@ -56,7 +57,7 @@ export const LoginScreen = ({
         email: email.trim(),
         role: selectedRole,
       });
-    }, 500);
+    }, 450);
   };
 
   const handleForgotPassword = () => {
@@ -68,19 +69,30 @@ export const LoginScreen = ({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.screenWrapper}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          style={styles.scrollArea}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingTop: SPACING.md,
+              paddingBottom: Math.max(insets.bottom, 24),
+            },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {/* Top Nav Back */}
           {onNavigateBack && (
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={onNavigateBack}
               style={styles.backButton}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <Ionicons name="arrow-back" size={22} color={COLORS.primaryNavy} />
             </TouchableOpacity>
@@ -89,7 +101,7 @@ export const LoginScreen = ({
           {/* Branding Header */}
           <View style={styles.brandContainer}>
             <View style={styles.brandIcon}>
-              <Ionicons name="shield-checkmark" size={28} color={COLORS.accentTeal} />
+              <Ionicons name="shield-checkmark" size={26} color={COLORS.accentTeal} />
             </View>
             <Text style={styles.appName}>SupportDesk AI</Text>
             <Text style={styles.heading}>Welcome back</Text>
@@ -133,6 +145,7 @@ export const LoginScreen = ({
                 activeOpacity={0.7}
                 onPress={() => setRememberMe(!rememberMe)}
                 style={styles.checkboxRow}
+                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
               >
                 <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
                   {rememberMe && <Ionicons name="checkmark" size={13} color={COLORS.white} />}
@@ -140,7 +153,11 @@ export const LoginScreen = ({
                 <Text style={styles.checkboxLabel}>Remember me</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity activeOpacity={0.7} onPress={handleForgotPassword}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleForgotPassword}
+                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+              >
                 <Text style={styles.forgotText}>Forgot password?</Text>
               </TouchableOpacity>
             </View>
@@ -149,7 +166,7 @@ export const LoginScreen = ({
             <AppButton
               title="Sign In"
               onPress={() => handleSignIn('customer')}
-              variant="primary"
+              variant="navy"
               size="lg"
               loading={loading}
               style={styles.submitBtn}
@@ -192,64 +209,70 @@ export const LoginScreen = ({
           {/* Footer Register Link */}
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>Don't have an account yet? </Text>
-            <TouchableOpacity activeOpacity={0.7} onPress={onNavigateToRegister}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={onNavigateToRegister}
+              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+            >
               <Text style={styles.createAccountLink}>Create Account</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  screenWrapper: {
     flex: 1,
     backgroundColor: COLORS.lightBg,
   },
   keyboardView: {
     flex: 1,
   },
+  scrollArea: {
+    flex: 1,
+  },
   scrollContent: {
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.xxl,
+    flexGrow: 1,
   },
   backButton: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: RADIUS.sm,
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   brandContainer: {
     alignItems: 'center',
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
   },
   brandIcon: {
-    width: 52,
-    height: 52,
+    width: 48,
+    height: 48,
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.primaryNavy,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.xs + 2,
+    marginBottom: SPACING.xs,
   },
   appName: {
-    fontSize: TYPOGRAPHY.sm,
+    fontSize: TYPOGRAPHY.xs + 1,
     fontWeight: TYPOGRAPHY.bold,
     color: COLORS.primaryNavy,
     letterSpacing: 0.5,
   },
   heading: {
-    fontSize: TYPOGRAPHY.xxl,
+    fontSize: TYPOGRAPHY.xl + 2,
     fontWeight: TYPOGRAPHY.bold,
     color: COLORS.mainText,
-    marginTop: SPACING.xs,
+    marginTop: 2,
   },
   subheading: {
     fontSize: TYPOGRAPHY.xs + 1,
@@ -265,12 +288,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: SPACING.lg,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   optionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
     marginTop: 2,
   },
   checkboxRow: {
@@ -302,19 +330,19 @@ const styles = StyleSheet.create({
     fontWeight: TYPOGRAPHY.semiBold,
   },
   submitBtn: {
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   demoSection: {
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    paddingTop: SPACING.md,
+    paddingTop: SPACING.sm + 2,
     marginTop: SPACING.xs,
     alignItems: 'center',
   },
   demoLabel: {
     fontSize: TYPOGRAPHY.xs,
     color: COLORS.secondaryText,
-    marginBottom: SPACING.xs + 2,
+    marginBottom: SPACING.xs,
     fontWeight: TYPOGRAPHY.medium,
   },
   demoButtonsRow: {
@@ -328,9 +356,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: COLORS.border,
-    paddingVertical: 5,
+    paddingVertical: 6,
     paddingHorizontal: 10,
-    marginHorizontal: 4,
+    marginHorizontal: 3,
   },
   demoRoleText: {
     fontSize: TYPOGRAPHY.xs,
@@ -341,7 +369,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: SPACING.xl,
+    marginTop: SPACING.lg,
   },
   footerText: {
     fontSize: TYPOGRAPHY.sm,

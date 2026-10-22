@@ -24,6 +24,9 @@ export const AppButton = ({
   if (variant === 'teal') {
     bgColor = COLORS.accentTeal;
     textColor = COLORS.white;
+  } else if (variant === 'navy' || variant === 'primary') {
+    bgColor = COLORS.primaryNavy;
+    textColor = COLORS.white;
   } else if (variant === 'secondary') {
     bgColor = COLORS.secondaryNavy;
     textColor = COLORS.white;
@@ -41,7 +44,8 @@ export const AppButton = ({
   }
 
   const paddingV = size === 'sm' ? 8 : size === 'lg' ? 14 : 11;
-  const paddingH = size === 'sm' ? 12 : size === 'lg' ? 24 : 16;
+  const paddingH = size === 'sm' ? 12 : size === 'lg' ? 20 : 16;
+  const minHeight = size === 'sm' ? 38 : size === 'lg' ? 50 : 44;
   const fontSize = size === 'sm' ? TYPOGRAPHY.sm : size === 'lg' ? TYPOGRAPHY.md : TYPOGRAPHY.base;
 
   const isDisabled = disabled || loading;
@@ -59,6 +63,7 @@ export const AppButton = ({
           borderWidth,
           paddingVertical: paddingV,
           paddingHorizontal: paddingH,
+          minHeight,
         },
         style,
       ]}
@@ -98,6 +103,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 1,
   },
   leftIcon: {
     marginRight: SPACING.sm,
@@ -108,5 +114,6 @@ const styles = StyleSheet.create({
   text: {
     textAlign: 'center',
     letterSpacing: 0.2,
+    flexShrink: 1,
   },
 });
