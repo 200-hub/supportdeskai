@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -26,6 +27,7 @@ export const HelpCenterScreen = ({
   onNavigateToCreateTicket,
   onNavigateToChat,
 }) => {
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedArticle, setSelectedArticle] = useState(null);
@@ -72,7 +74,13 @@ export const HelpCenterScreen = ({
           }}
         />
 
-        <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          style={styles.scrollArea}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: Math.max(insets.bottom, 16) + 72 },
+          ]}
+        >
           <View style={styles.articleDetailCard}>
             <View style={styles.articleMetaTop}>
               <View style={styles.categoryBadge}>
@@ -184,7 +192,13 @@ export const HelpCenterScreen = ({
         onBack={onNavigateBack}
       />
 
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom, 16) + 72 },
+        ]}
+      >
         {/* Search Field */}
         <View style={styles.searchBox}>
           <Ionicons name="search-outline" size={18} color={COLORS.secondaryText} style={{ marginRight: SPACING.sm }} />

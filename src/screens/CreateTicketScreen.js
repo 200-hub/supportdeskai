@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -22,6 +23,7 @@ export const CreateTicketScreen = ({
   onCreateTicket,
   onNavigateBack,
 }) => {
+  const insets = useSafeAreaInsets();
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Technical & API');
@@ -42,7 +44,7 @@ export const CreateTicketScreen = ({
     { key: 'low', label: 'Low', color: '#64748B' },
     { key: 'medium', label: 'Medium', color: '#D97706' },
     { key: 'high', label: 'High', color: '#EA580C' },
-    { key: 'urgent', label: 'Urgent', color: '#DC2626' },
+    { key: 'urgent', label: 'Urgent', color: '#DC3545' },
   ];
 
   const handleAddSampleAttachment = () => {
@@ -145,11 +147,11 @@ export const CreateTicketScreen = ({
           },
         ]
       );
-    }, 700);
+    }, 600);
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.container}>
       <ScreenHeader
         title="Create Support Ticket"
         subtitle="Submit inquiry for human or AI resolution"
@@ -158,13 +160,21 @@ export const CreateTicketScreen = ({
       />
 
       <KeyboardAvoidingView
-        style={styles.container}
+        style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          style={styles.scrollArea}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: Math.max(insets.bottom, 24) },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {/* Demo Disclaimer Banner */}
           <View style={styles.demoBanner}>
-            <Ionicons name="information-circle" size={15} color={COLORS.primaryNavy} style={{ marginRight: 6 }} />
+            <Ionicons name="information-circle-outline" size={15} color={COLORS.primaryNavy} style={{ marginRight: 6 }} />
             <Text style={styles.demoBannerText}>
               In local demo mode, submitted tickets are appended to your active application session.
             </Text>
@@ -233,6 +243,7 @@ export const CreateTicketScreen = ({
                         styles.priorityBtnText,
                         { color: isSelected ? COLORS.white : COLORS.mainText },
                       ]}
+                      numberOfLines={1}
                     >
                       {p.label}
                     </Text>
@@ -262,6 +273,7 @@ export const CreateTicketScreen = ({
               activeOpacity={0.7}
               onPress={handleAddSampleAttachment}
               style={styles.attachmentButton}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
               <Ionicons name="cloud-upload-outline" size={18} color={COLORS.primaryNavy} style={{ marginRight: 6 }} />
               <Text style={styles.attachmentBtnText}>Upload File / Log Dump</Text>
@@ -294,26 +306,30 @@ export const CreateTicketScreen = ({
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.primaryNavy,
-  },
   container: {
     flex: 1,
     backgroundColor: COLORS.lightBg,
   },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollArea: {
+    flex: 1,
+  },
   scrollContent: {
     padding: SPACING.lg,
-    paddingBottom: SPACING.xxl,
+    flexGrow: 1,
   },
   demoBanner: {
-    backgroundColor: '#CCFBF1',
+    backgroundColor: '#F0FDFA',
     borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#99F6E4',
     padding: SPACING.sm + 2,
     flexDirection: 'row',
     alignItems: 'center',
@@ -323,6 +339,7 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.xs,
     color: COLORS.primaryNavy,
     flex: 1,
+    lineHeight: 16,
   },
   formCard: {
     backgroundColor: COLORS.white,
@@ -330,6 +347,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: SPACING.lg,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   fieldLabel: {
     fontSize: TYPOGRAPHY.sm,
@@ -369,14 +391,14 @@ const styles = StyleSheet.create({
   },
   priorityBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: RADIUS.md,
     borderWidth: 1,
     alignItems: 'center',
-    marginHorizontal: 3,
+    marginHorizontal: 2,
   },
   priorityBtnText: {
-    fontSize: TYPOGRAPHY.xs + 1,
+    fontSize: 12,
     fontWeight: TYPOGRAPHY.semiBold,
   },
   attachmentButton: {

@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
-import { StyleSheet, SafeAreaView, View, StatusBar } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, StatusBar, Appearance } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from './src/theme/colors';
+
+// Explicitly lock app appearance to fixed light mode
+if (Appearance && Appearance.setColorScheme) {
+  try {
+    Appearance.setColorScheme('light');
+  } catch (e) {
+    // Ignore if not supported in environment
+  }
+}
 import {
   INITIAL_USER,
   INITIAL_TICKETS,
@@ -379,15 +388,28 @@ export default function App() {
   const showBottomNav =
     authScreen === null &&
     activeOverlay === null &&
-    currentUser.role === 'customer';
+    currentUser.role === 'customer' &&
+    customerTab !== 'chat';
 
   const unreadTicketsCount = tickets.filter((t) => t.status === 'open').length;
   const unreadNotifsCount = notifications.filter((n) => !n.isRead).length;
 
+  const isAuthScreen = authScreen !== null;
+
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryNavy} />
-      <SafeAreaView style={styles.safeArea}>
+      <StatusBar
+        barStyle={isAuthScreen ? 'dark-content' : 'light-content'}
+        backgroundColor={isAuthScreen ? COLORS.lightBg : COLORS.primaryNavy}
+        translucent={false}
+      />
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: isAuthScreen ? COLORS.lightBg : COLORS.primaryNavy },
+        ]}
+        edges={['top']}
+      >
         <View style={styles.container}>
           {renderScreen()}
 

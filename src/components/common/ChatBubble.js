@@ -11,10 +11,12 @@ export const ChatBubble = ({
   timestamp,
   senderName,
   isDemo = false,
+  isOutgoing, // Optional override: true aligns right, false aligns left
 }) => {
-  const isCustomer = senderType === 'customer';
   const isInternalNote = senderType === 'internal_note';
   const isAssistant = senderType === 'assistant';
+  // By default, customer is the app user (outgoing = right), assistant and agent are incoming = left
+  const outgoing = isOutgoing !== undefined ? isOutgoing : senderType === 'customer';
 
   if (isInternalNote) {
     return (
@@ -38,17 +40,23 @@ export const ChatBubble = ({
     <View
       style={[
         styles.bubbleContainer,
-        isCustomer ? styles.customerAlign : styles.agentAlign,
+        outgoing ? styles.outgoingAlign : styles.incomingAlign,
       ]}
     >
-      <View style={styles.headerRow}>
-        {!isCustomer && senderName && <Text style={styles.senderLabel}>{senderName}</Text>}
-        {isCustomer && senderName && <Text style={styles.senderLabel}>{senderName}</Text>}
-        {isAssistant && (
+      <View
+        style={[
+          styles.headerRow,
+          outgoing ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' },
+        ]}
+      >
+        {!outgoing && isAssistant && (
           <View style={styles.aiPill}>
-            <Ionicons name="sparkles" size={10} color={COLORS.accentTeal} style={{ marginRight: 2 }} />
-            <Text style={styles.aiPillText}>AI Assistant</Text>
+            <Ionicons name="sparkles" size={10} color="#0F766E" style={{ marginRight: 3 }} />
+            <Text style={styles.aiPillText}>AI Copilot</Text>
           </View>
+        )}
+        {!outgoing && senderName && !isAssistant && (
+          <Text style={styles.senderLabel}>{senderName}</Text>
         )}
         <Text style={styles.timestamp}>{timestamp}</Text>
       </View>
@@ -56,25 +64,21 @@ export const ChatBubble = ({
       <View
         style={[
           styles.bubble,
-          isCustomer
-            ? styles.customerBubble
-            : isAssistant
-            ? styles.assistantBubble
-            : styles.agentBubble,
+          outgoing ? styles.outgoingBubble : styles.incomingBubble,
         ]}
       >
         <Text
           style={[
             styles.messageText,
-            isCustomer || isAssistant ? styles.darkText : styles.lightText,
+            outgoing ? styles.outgoingText : styles.incomingText,
           ]}
         >
           {message}
         </Text>
       </View>
 
-      {isDemo && !isCustomer && (
-        <Text style={styles.demoNotice}>• Demo simulated response</Text>
+      {isDemo && !outgoing && (
+        <Text style={styles.demoNotice}>• Grounded simulation</Text>
       )}
     </View>
   );
@@ -83,13 +87,13 @@ export const ChatBubble = ({
 const styles = StyleSheet.create({
   bubbleContainer: {
     marginBottom: SPACING.md,
-    maxWidth: '85%',
+    maxWidth: '84%',
   },
-  customerAlign: {
-    alignSelf: 'flex-start',
-  },
-  agentAlign: {
+  outgoingAlign: {
     alignSelf: 'flex-end',
+  },
+  incomingAlign: {
+    alignSelf: 'flex-start',
   },
   headerRow: {
     flexDirection: 'row',
@@ -106,13 +110,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#CCFBF1',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: RADIUS.xs,
-    marginRight: SPACING.xs,
+    marginRight: SPACING.xs + 2,
   },
   aiPillText: {
-    fontSize: 9,
+    fontSize: 10,
     color: '#0F766E',
     fontWeight: TYPOGRAPHY.bold,
   },
@@ -122,39 +126,38 @@ const styles = StyleSheet.create({
   },
   bubble: {
     borderRadius: RADIUS.lg,
-    padding: SPACING.md,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
   },
-  customerBubble: {
+  outgoingBubble: {
+    backgroundColor: COLORS.primaryNavy,
+    borderTopRightRadius: RADIUS.xs,
+  },
+  incomingBubble: {
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderTopLeftRadius: RADIUS.xs,
-  },
-  assistantBubble: {
-    backgroundColor: '#F0FDFA',
-    borderWidth: 1,
-    borderColor: '#99F6E4',
-    borderTopRightRadius: RADIUS.xs,
-  },
-  agentBubble: {
-    backgroundColor: COLORS.primaryNavy,
-    borderTopRightRadius: RADIUS.xs,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
   },
   messageText: {
     fontSize: TYPOGRAPHY.sm,
-    lineHeight: TYPOGRAPHY.lineHeightNormal,
+    lineHeight: 20,
   },
-  darkText: {
-    color: COLORS.mainText,
-  },
-  lightText: {
+  outgoingText: {
     color: COLORS.white,
+  },
+  incomingText: {
+    color: COLORS.mainText,
   },
   demoNotice: {
     fontSize: TYPOGRAPHY.xs - 2,
     color: COLORS.secondaryText,
-    marginTop: 2,
-    alignSelf: 'flex-end',
+    marginTop: 3,
     fontStyle: 'italic',
   },
   noteWrapper: {

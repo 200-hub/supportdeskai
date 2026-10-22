@@ -6,8 +6,10 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -22,6 +24,7 @@ export const MyTicketsScreen = ({
   onNavigateToCreateTicket,
   onNavigateBack,
 }) => {
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState(initialFilter);
 
@@ -60,8 +63,9 @@ export const MyTicketsScreen = ({
             activeOpacity={0.7}
             onPress={onNavigateToCreateTicket}
             style={styles.newTicketHeaderBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
           >
-            <Ionicons name="add" size={18} color={COLORS.white} style={{ marginRight: 2 }} />
+            <Ionicons name="add" size={17} color={COLORS.white} style={{ marginRight: 2 }} />
             <Text style={styles.newTicketHeaderBtnText}>New Ticket</Text>
           </TouchableOpacity>
         }
@@ -86,43 +90,52 @@ export const MyTicketsScreen = ({
         </View>
       </View>
 
-      {/* Filter Chips Row */}
+      {/* Filter Chips Row (Horizontal Scroll to prevent overflow on narrow Android devices) */}
       <View style={styles.chipsSection}>
-        {filterChips.map((chip) => {
-          const isSelected = selectedStatus === chip.key;
-          const count =
-            chip.key === 'all'
-              ? tickets.length
-              : tickets.filter((t) => t.status === chip.key).length;
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsScroll}
+        >
+          {filterChips.map((chip) => {
+            const isSelected = selectedStatus === chip.key;
+            const count =
+              chip.key === 'all'
+                ? tickets.length
+                : tickets.filter((t) => t.status === chip.key).length;
 
-          return (
-            <TouchableOpacity
-              key={chip.key}
-              activeOpacity={0.7}
-              onPress={() => setSelectedStatus(chip.key)}
-              style={[
-                styles.chip,
-                isSelected ? styles.chipSelected : styles.chipUnselected,
-              ]}
-            >
-              <Text
+            return (
+              <TouchableOpacity
+                key={chip.key}
+                activeOpacity={0.7}
+                onPress={() => setSelectedStatus(chip.key)}
                 style={[
-                  styles.chipText,
-                  { color: isSelected ? COLORS.white : COLORS.mainText },
+                  styles.chip,
+                  isSelected ? styles.chipSelected : styles.chipUnselected,
                 ]}
               >
-                {chip.label} ({count})
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+                <Text
+                  style={[
+                    styles.chipText,
+                    { color: isSelected ? COLORS.white : COLORS.mainText },
+                  ]}
+                >
+                  {chip.label} ({count})
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
       {/* Tickets List */}
       <FlatList
         data={filteredTickets}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: Math.max(insets.bottom, 16) + 72 },
+        ]}
         renderItem={({ item }) => (
           <TicketCard
             ticket={item}
@@ -155,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.accentTeal,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.sm,
   },
   newTicketHeaderBtnText: {
     fontSize: TYPOGRAPHY.xs,
@@ -182,9 +195,10 @@ const styles = StyleSheet.create({
     color: COLORS.mainText,
   },
   chipsSection: {
-    flexDirection: 'row',
-    paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
+  },
+  chipsScroll: {
+    paddingHorizontal: SPACING.lg,
   },
   chip: {
     paddingVertical: 6,
@@ -207,6 +221,5 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xxl,
   },
 });
