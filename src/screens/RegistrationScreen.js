@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -11,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -22,6 +22,7 @@ export const RegistrationScreen = ({
   onNavigateToLogin,
   onNavigateBack,
 }) => {
+  const insets = useSafeAreaInsets();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -84,23 +85,34 @@ export const RegistrationScreen = ({
           },
         ]
       );
-    }, 600);
+    }, 500);
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.screenWrapper}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          style={styles.scrollArea}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingTop: SPACING.md,
+              paddingBottom: Math.max(insets.bottom, 24),
+            },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {/* Top Nav Back */}
           {onNavigateBack && (
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={onNavigateBack}
               style={styles.backButton}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <Ionicons name="arrow-back" size={22} color={COLORS.primaryNavy} />
             </TouchableOpacity>
@@ -109,7 +121,7 @@ export const RegistrationScreen = ({
           {/* Heading */}
           <View style={styles.headerSection}>
             <View style={styles.brandIcon}>
-              <Ionicons name="person-add-outline" size={26} color={COLORS.accentTeal} />
+              <Ionicons name="person-add-outline" size={24} color={COLORS.accentTeal} />
             </View>
             <Text style={styles.heading}>Create Account</Text>
             <Text style={styles.subheading}>
@@ -179,6 +191,7 @@ export const RegistrationScreen = ({
                 if (errors.terms) setErrors((prev) => ({ ...prev, terms: null }));
               }}
               style={styles.checkboxRow}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
               <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
                 {agreedToTerms && <Ionicons name="checkmark" size={13} color={COLORS.white} />}
@@ -210,47 +223,53 @@ export const RegistrationScreen = ({
           {/* Footer Link to Login */}
           <View style={styles.footerRow}>
             <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity activeOpacity={0.7} onPress={onNavigateToLogin}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={onNavigateToLogin}
+              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+            >
               <Text style={styles.loginLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  screenWrapper: {
     flex: 1,
     backgroundColor: COLORS.lightBg,
   },
   keyboardView: {
     flex: 1,
   },
+  scrollArea: {
+    flex: 1,
+  },
   scrollContent: {
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.xxl,
+    flexGrow: 1,
   },
   backButton: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: RADIUS.sm,
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   headerSection: {
     alignItems: 'center',
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
   },
   brandIcon: {
-    width: 50,
-    height: 50,
+    width: 48,
+    height: 48,
     borderRadius: RADIUS.md,
     backgroundColor: COLORS.primaryNavy,
     alignItems: 'center',
@@ -258,7 +277,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   heading: {
-    fontSize: TYPOGRAPHY.xxl,
+    fontSize: TYPOGRAPHY.xl + 2,
     fontWeight: TYPOGRAPHY.bold,
     color: COLORS.mainText,
   },
@@ -276,6 +295,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: SPACING.lg,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   checkboxRow: {
     flexDirection: 'row',
@@ -323,7 +347,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: SPACING.xl,
+    marginTop: SPACING.lg,
   },
   footerText: {
     fontSize: TYPOGRAPHY.sm,

@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../../theme/colors';
 import { TYPOGRAPHY } from '../../theme/typography';
-import { SPACING } from '../../theme/spacing';
+import { SPACING, RADIUS } from '../../theme/spacing';
 
 export const BottomNavigation = ({
   currentTab,
@@ -11,6 +12,9 @@ export const BottomNavigation = ({
   ticketBadge = 0,
   chatBadge = 0,
 }) => {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, 12);
+
   const tabs = [
     { key: 'home', label: 'Home', icon: 'home' },
     { key: 'tickets', label: 'My Tickets', icon: 'ticket', badge: ticketBadge },
@@ -20,7 +24,7 @@ export const BottomNavigation = ({
   ];
 
   return (
-    <View style={styles.navBar}>
+    <View style={[styles.navBar, { paddingBottom: bottomPadding }]}>
       {tabs.map((tab) => {
         const isActive = currentTab === tab.key;
         return (
@@ -29,8 +33,22 @@ export const BottomNavigation = ({
             activeOpacity={0.7}
             onPress={() => onSelectTab(tab.key)}
             style={styles.tabItem}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
-            <View style={styles.iconContainer}>
+            {/* Active Indicator Top Accent */}
+            <View
+              style={[
+                styles.activeIndicator,
+                { backgroundColor: isActive ? COLORS.accentTeal : 'transparent' },
+              ]}
+            />
+
+            <View
+              style={[
+                styles.iconContainer,
+                isActive && styles.activeIconWrapper,
+              ]}
+            >
               <Ionicons
                 name={isActive ? tab.icon : `${tab.icon}-outline`}
                 size={22}
@@ -42,12 +60,13 @@ export const BottomNavigation = ({
                 </View>
               ) : null}
             </View>
+
             <Text
               style={[
                 styles.tabLabel,
                 {
                   color: isActive ? COLORS.primaryNavy : COLORS.secondaryText,
-                  fontWeight: isActive ? TYPOGRAPHY.bold : TYPOGRAPHY.medium,
+                  fontWeight: isActive ? TYPOGRAPHY.bold : TYPOGRAPHY.semiBold,
                 },
               ]}
             >
@@ -66,31 +85,50 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    paddingVertical: SPACING.xs + 2,
-    paddingBottom: SPACING.sm + 4,
+    paddingTop: 8,
     justifyContent: 'space-around',
     alignItems: 'center',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 8,
   },
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
+    position: 'relative',
+    paddingTop: 2,
+  },
+  activeIndicator: {
+    position: 'absolute',
+    top: -8,
+    width: 28,
+    height: 3,
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
   },
   iconContainer: {
     position: 'relative',
-    height: 26,
+    height: 28,
+    width: 38,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: RADIUS.sm,
+  },
+  activeIconWrapper: {
+    backgroundColor: '#CCFBF1',
   },
   tabLabel: {
-    fontSize: TYPOGRAPHY.xs - 1,
-    marginTop: 2,
+    fontSize: 11,
+    marginTop: 3,
     letterSpacing: 0.1,
   },
   badge: {
     position: 'absolute',
     top: -2,
-    right: -10,
+    right: 0,
     backgroundColor: COLORS.accentTeal,
     minWidth: 16,
     height: 16,
@@ -98,6 +136,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: COLORS.white,
   },
   badgeText: {
     color: COLORS.white,

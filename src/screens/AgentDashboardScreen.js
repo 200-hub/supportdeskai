@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -25,6 +26,7 @@ export const AgentDashboardScreen = ({
   onNavigateToNotifications,
   onNavigateBack,
 }) => {
+  const insets = useSafeAreaInsets();
   const [selectedFilter, setSelectedFilter] = useState('assigned'); // 'assigned', 'all', 'open', 'urgent'
   const [search, setSearch] = useState('');
 
@@ -89,7 +91,13 @@ export const AgentDashboardScreen = ({
         }
       />
 
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom, 24) },
+        ]}
+      >
         {/* Metric Cards Row */}
         <View style={styles.metricsGrid}>
           <SummaryCard

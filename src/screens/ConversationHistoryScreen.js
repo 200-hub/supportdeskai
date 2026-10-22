@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -20,6 +21,7 @@ export const ConversationHistoryScreen = ({
   onNavigateBack,
   onNewChat,
 }) => {
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
 
   const filtered = conversations.filter(
@@ -72,7 +74,10 @@ export const ConversationHistoryScreen = ({
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: Math.max(insets.bottom, 24) },
+        ]}
         renderItem={({ item }) => {
           const isActive = item.status === 'active';
           return (
