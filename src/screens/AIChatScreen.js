@@ -38,7 +38,9 @@ export const AIChatScreen = ({
   );
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(() =>
+    Keyboard.isVisible ? Keyboard.isVisible() : false
+  );
   const scrollViewRef = useRef(null);
 
   // Keyboard listeners for clean responsive padding adjustment on Android & iOS
@@ -206,6 +208,9 @@ export const AIChatScreen = ({
         contentContainerStyle={styles.messageContent}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        onLayout={() => {
+          scrollViewRef.current?.scrollToEnd({ animated: false });
+        }}
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
         {messages.map((item) => (
@@ -262,7 +267,11 @@ export const AIChatScreen = ({
         style={[
           styles.composerBar,
           {
-            paddingBottom: isKeyboardVisible ? 8 : Math.max(insets.bottom, 12),
+            paddingBottom: isKeyboardVisible
+              ? SPACING.sm
+              : insets.bottom > 0
+                ? insets.bottom + SPACING.sm
+                : SPACING.md,
           },
         ]}
       >
@@ -276,11 +285,14 @@ export const AIChatScreen = ({
             multiline
             maxHeight={100}
             underlineColorAndroid="transparent"
+            onPressIn={() => {
+              setIsKeyboardVisible(true);
+            }}
             onFocus={() => {
               setIsKeyboardVisible(true);
               setTimeout(() => {
                 scrollViewRef.current?.scrollToEnd({ animated: true });
-              }, 120);
+              }, 100);
             }}
           />
           <TouchableOpacity
@@ -310,7 +322,9 @@ export const AIChatScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    minHeight: 0,
     backgroundColor: COLORS.lightBg,
+    overflow: 'hidden',
   },
   chatHeader: {
     backgroundColor: COLORS.primaryNavy,
@@ -410,6 +424,7 @@ const styles = StyleSheet.create({
   },
   messageScroll: {
     flex: 1,
+    minHeight: 0,
   },
   messageContent: {
     padding: SPACING.md,
@@ -467,8 +482,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     paddingHorizontal: SPACING.md,
     paddingTop: 8,
+    paddingBottom: 8,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+    flexShrink: 0,
   },
   inputWrapper: {
     flexDirection: 'row',
