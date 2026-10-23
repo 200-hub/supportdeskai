@@ -151,7 +151,7 @@ export const AgentDashboardScreen = ({
             <Ionicons name="warning" size={18} color="#DC2626" style={{ marginRight: SPACING.sm }} />
             <View>
               <Text style={styles.slaTitle}>2 Tickets Near SLA Breach (&lt; 20m)</Text>
-              <Text style={styles.slaDesc}>First response target must be delivered immediately.</Text>
+              <Text style={styles.slaDesc}>First response target must be delivered.</Text>
             </View>
           </View>
           <TouchableOpacity

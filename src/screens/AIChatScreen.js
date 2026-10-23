@@ -134,7 +134,7 @@ export const AIChatScreen = ({
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      keyboardVerticalOffset={0}
     >
       {/* Top Header */}
       <View style={styles.chatHeader}>
