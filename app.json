@@ -6,15 +6,21 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+<<<<<<< HEAD
     "splash": {
       "backgroundColor": "#F5F7FA"
     },
+=======
+>>>>>>> 0b732f9ac4605d0f26e286a0f378ee378b0acd83
     "ios": {
       "supportsTablet": true,
       "userInterfaceStyle": "light"
     },
     "android": {
+<<<<<<< HEAD
       "userInterfaceStyle": "light",
+=======
+>>>>>>> 0b732f9ac4605d0f26e286a0f378ee378b0acd83
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#14213D",
@@ -34,6 +40,18 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#14213D",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain"
+        }
+      ]
+    ]
   }
 }
