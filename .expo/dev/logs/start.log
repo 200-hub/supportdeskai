@@ -575,3 +575,9 @@
 {"_e":"metro:bundling:done","_t":1792753827519,"id":"4","total":387,"ms":8201.7335}
 {"_e":"metro:client_log","_t":1792753827797,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
 {"_e":"metro:client_log","_t":1792753827798,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:bundling:started","_t":1792753869941,"id":"8","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1792753869942,"id":"8","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792753869987,"id":"8","total":1,"ms":45.8292}
+{"_e":"metro:bundling:started","_t":1792753926206,"id":"9","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1792753926206,"id":"9","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792753926248,"id":"9","total":1,"ms":42.3309}
