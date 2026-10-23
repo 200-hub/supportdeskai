@@ -11,12 +11,11 @@ export const ChatBubble = ({
   timestamp,
   senderName,
   isDemo = false,
-  isOutgoing, // Optional override: true aligns right, false aligns left
+  isOutgoing,
 }) => {
+  const isCustomer = senderType === 'customer';
   const isInternalNote = senderType === 'internal_note';
   const isAssistant = senderType === 'assistant';
-  // By default, customer is the app user (outgoing = right), assistant and agent are incoming = left
-  const outgoing = isOutgoing !== undefined ? isOutgoing : senderType === 'customer';
 
   if (isInternalNote) {
     return (
@@ -36,49 +35,54 @@ export const ChatBubble = ({
     );
   }
 
+  // Determine if this bubble should be aligned as outgoing (right) or incoming (left)
+  const isOutgoingBubble =
+    isOutgoing !== undefined ? isOutgoing : !isAssistant && isCustomer;
+
+  const getBubbleStyle = () => {
+    if (isOutgoingBubble) {
+      return styles.outgoingBubble;
+    }
+    if (isAssistant) {
+      return styles.assistantBubble;
+    }
+    if (isCustomer) {
+      return styles.customerBubble;
+    }
+    return styles.incomingAgentBubble;
+  };
+
   return (
     <View
       style={[
         styles.bubbleContainer,
-        outgoing ? styles.outgoingAlign : styles.incomingAlign,
+        isOutgoingBubble ? styles.outgoingAlign : styles.incomingAlign,
       ]}
     >
       <View
         style={[
           styles.headerRow,
-          outgoing ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' },
+          isOutgoingBubble ? styles.headerRowOutgoing : styles.headerRowIncoming,
         ]}
       >
-        {!outgoing && isAssistant && (
+        {!isOutgoingBubble && isAssistant && (
           <View style={styles.aiPill}>
-            <Ionicons name="sparkles" size={10} color="#0F766E" style={{ marginRight: 3 }} />
-            <Text style={styles.aiPillText}>AI Copilot</Text>
+            <Ionicons name="sparkles" size={10} color={COLORS.accentTeal} style={{ marginRight: 2 }} />
+            <Text style={styles.aiPillText}>AI Assistant</Text>
           </View>
         )}
-        {!outgoing && senderName && !isAssistant && (
-          <Text style={styles.senderLabel}>{senderName}</Text>
-        )}
+        {senderName ? <Text style={styles.senderLabel}>{senderName}</Text> : null}
         <Text style={styles.timestamp}>{timestamp}</Text>
       </View>
 
-      <View
-        style={[
-          styles.bubble,
-          outgoing ? styles.outgoingBubble : styles.incomingBubble,
-        ]}
-      >
-        <Text
-          style={[
-            styles.messageText,
-            outgoing ? styles.outgoingText : styles.incomingText,
-          ]}
-        >
+      <View style={[styles.bubble, getBubbleStyle()]}>
+        <Text style={[styles.messageText, isOutgoingBubble ? styles.lightText : styles.darkText]}>
           {message}
         </Text>
       </View>
 
-      {isDemo && !outgoing && (
-        <Text style={styles.demoNotice}>• Grounded simulation</Text>
+      {isDemo && !isOutgoingBubble && (
+        <Text style={styles.demoNotice}>• Demo simulated response</Text>
       )}
     </View>
   );
@@ -87,18 +91,24 @@ export const ChatBubble = ({
 const styles = StyleSheet.create({
   bubbleContainer: {
     marginBottom: SPACING.md,
-    maxWidth: '84%',
-  },
-  outgoingAlign: {
-    alignSelf: 'flex-end',
+    maxWidth: '85%',
   },
   incomingAlign: {
     alignSelf: 'flex-start',
+  },
+  outgoingAlign: {
+    alignSelf: 'flex-end',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 4,
+  },
+  headerRowIncoming: {
+    justifyContent: 'flex-start',
+  },
+  headerRowOutgoing: {
+    justifyContent: 'flex-end',
   },
   senderLabel: {
     fontSize: TYPOGRAPHY.xs,
@@ -110,13 +120,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#CCFBF1',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
     borderRadius: RADIUS.xs,
-    marginRight: SPACING.xs + 2,
+    marginRight: SPACING.xs,
   },
   aiPillText: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#0F766E',
     fontWeight: TYPOGRAPHY.bold,
   },
@@ -126,38 +136,45 @@ const styles = StyleSheet.create({
   },
   bubble: {
     borderRadius: RADIUS.lg,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    padding: SPACING.md,
   },
   outgoingBubble: {
     backgroundColor: COLORS.primaryNavy,
     borderTopRightRadius: RADIUS.xs,
   },
-  incomingBubble: {
+  customerBubble: {
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderTopLeftRadius: RADIUS.xs,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    elevation: 1,
+  },
+  assistantBubble: {
+    backgroundColor: '#F0FDFA',
+    borderWidth: 1,
+    borderColor: '#99F6E4',
+    borderTopLeftRadius: RADIUS.xs,
+  },
+  incomingAgentBubble: {
+    backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    borderTopLeftRadius: RADIUS.xs,
   },
   messageText: {
     fontSize: TYPOGRAPHY.sm,
-    lineHeight: 20,
+    lineHeight: TYPOGRAPHY.lineHeightNormal,
   },
-  outgoingText: {
-    color: COLORS.white,
-  },
-  incomingText: {
+  darkText: {
     color: COLORS.mainText,
+  },
+  lightText: {
+    color: COLORS.white,
   },
   demoNotice: {
     fontSize: TYPOGRAPHY.xs - 2,
     color: COLORS.secondaryText,
-    marginTop: 3,
+    marginTop: 2,
+    alignSelf: 'flex-start',
     fontStyle: 'italic',
   },
   noteWrapper: {

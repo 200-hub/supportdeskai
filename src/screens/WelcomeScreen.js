@@ -1,45 +1,24 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  StatusBar,
-} from 'react-native';
+import { View, Text, StyleSheet, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
 import { AppButton } from '../components/common/AppButton';
 
 export const WelcomeScreen = ({ onGetStarted, onLogin }) => {
-  const insets = useSafeAreaInsets();
-
   return (
-    <View style={styles.screenWrapper}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.lightBg} translucent={false} />
-
-      <ScrollView
-        style={styles.scrollArea}
-        contentContainerStyle={[
-          styles.container,
-          {
-            paddingTop: SPACING.md,
-            paddingBottom: Math.max(insets.bottom, 18),
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-      >
-        {/* Top Brand Section */}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryNavy} />
+      <View style={styles.container}>
+        {/* Top Brand Area */}
         <View style={styles.brandSection}>
           <View style={styles.logoBadge}>
-            <Ionicons name="shield-checkmark" size={34} color={COLORS.accentTeal} />
+            <Ionicons name="shield-checkmark" size={38} color={COLORS.accentTeal} />
           </View>
           <Text style={styles.appName}>SupportDesk AI</Text>
           <View style={styles.taglineChip}>
-            <Ionicons name="sparkles" size={12} color="#0F766E" style={{ marginRight: 5 }} />
             <Text style={styles.tagline}>Smart Support. Simple Solutions.</Text>
           </View>
           <Text style={styles.introduction}>
@@ -47,41 +26,35 @@ export const WelcomeScreen = ({ onGetStarted, onLogin }) => {
           </Text>
         </View>
 
-        {/* Feature Highlights */}
+        {/* Feature Highlights (Solid cards) */}
         <View style={styles.featuresSection}>
           <View style={styles.featureItem}>
             <View style={styles.featureIconBox}>
-              <Ionicons name="flash-outline" size={19} color={COLORS.accentTeal} />
+              <Ionicons name="flash-outline" size={18} color={COLORS.accentTeal} />
             </View>
             <View style={styles.featureTextGroup}>
               <Text style={styles.featureTitle}>Instant Grounded Answers</Text>
-              <Text style={styles.featureDesc}>
-                Deflect routine questions with verified AI knowledge citations.
-              </Text>
+              <Text style={styles.featureDesc}>Deflect routine questions with verified AI knowledge citations.</Text>
             </View>
           </View>
 
           <View style={styles.featureItem}>
             <View style={styles.featureIconBox}>
-              <Ionicons name="chatbubbles-outline" size={19} color={COLORS.accentTeal} />
+              <Ionicons name="chatbubbles-outline" size={18} color={COLORS.accentTeal} />
             </View>
             <View style={styles.featureTextGroup}>
               <Text style={styles.featureTitle}>Omnichannel Sync</Text>
-              <Text style={styles.featureDesc}>
-                Seamlessly track inquiries across Email, WhatsApp, and Live Chat.
-              </Text>
+              <Text style={styles.featureDesc}>Seamlessly track inquiries across Email, WhatsApp, and Chat.</Text>
             </View>
           </View>
 
           <View style={styles.featureItem}>
             <View style={styles.featureIconBox}>
-              <Ionicons name="time-outline" size={19} color={COLORS.accentTeal} />
+              <Ionicons name="time-outline" size={18} color={COLORS.accentTeal} />
             </View>
             <View style={styles.featureTextGroup}>
               <Text style={styles.featureTitle}>Guaranteed SLA Resolution</Text>
-              <Text style={styles.featureDesc}>
-                Live tracking with at-risk response countdown alerts.
-              </Text>
+              <Text style={styles.featureDesc}>Live tracking with at-risk response notifications.</Text>
             </View>
           </View>
         </View>
@@ -97,110 +70,92 @@ export const WelcomeScreen = ({ onGetStarted, onLogin }) => {
             iconPosition="right"
             style={styles.primaryBtn}
           />
-
           <AppButton
             title="Sign In to Existing Account"
             onPress={onLogin}
-            variant="navy"
+            variant="outline"
             size="lg"
             style={styles.secondaryBtn}
+            textStyle={{ color: COLORS.primaryNavy }}
           />
-
-          <Text style={styles.versionNote}>SupportDesk AI for Mobile • v1.0.0</Text>
+          <Text style={styles.versionNote}>SupportDesk AI for Android • v1.0.0</Text>
         </View>
-      </ScrollView>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  screenWrapper: {
+  safeArea: {
     flex: 1,
-    backgroundColor: COLORS.lightBg,
-  },
-  scrollArea: {
-    flex: 1,
+    backgroundColor: COLORS.primaryNavy,
   },
   container: {
-    flexGrow: 1,
-    paddingHorizontal: SPACING.lg,
+    flex: 1,
+    backgroundColor: COLORS.primaryNavy,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.lg,
     justifyContent: 'space-between',
-    backgroundColor: COLORS.lightBg,
   },
   brandSection: {
     alignItems: 'center',
-    paddingTop: SPACING.xs,
+    paddingTop: SPACING.xl,
   },
   logoBadge: {
-    width: 64,
-    height: 64,
+    width: 72,
+    height: 72,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.secondaryNavy,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#2A3F6D',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.sm,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: SPACING.md,
   },
   appName: {
-    fontSize: TYPOGRAPHY.xl + 2,
+    fontSize: TYPOGRAPHY.xxl + 2,
     fontWeight: TYPOGRAPHY.bold,
-    color: COLORS.primaryNavy,
-    letterSpacing: 0.3,
+    color: COLORS.white,
+    letterSpacing: 0.5,
   },
   taglineChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0FDFA',
+    backgroundColor: COLORS.secondaryNavy,
     borderRadius: RADIUS.full,
     paddingHorizontal: SPACING.md,
     paddingVertical: 4,
-    marginTop: 6,
-    marginBottom: SPACING.sm,
-    borderWidth: 1,
-    borderColor: '#99F6E4',
+    marginTop: SPACING.xs + 2,
+    marginBottom: SPACING.md,
   },
   tagline: {
-    fontSize: TYPOGRAPHY.xs,
-    color: '#0F766E',
-    fontWeight: TYPOGRAPHY.bold,
+    fontSize: TYPOGRAPHY.xs + 1,
+    color: COLORS.accentTeal,
+    fontWeight: TYPOGRAPHY.semiBold,
   },
   introduction: {
-    fontSize: TYPOGRAPHY.xs + 1,
-    color: COLORS.secondaryText,
+    fontSize: TYPOGRAPHY.sm,
+    color: '#94A3B8',
     textAlign: 'center',
-    lineHeight: 19,
+    lineHeight: 20,
     maxWidth: 320,
-    paddingHorizontal: SPACING.xs,
   },
   featuresSection: {
-    marginVertical: SPACING.md,
+    marginVertical: SPACING.lg,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.secondaryNavy,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: '#2A3F6D',
     padding: SPACING.md,
-    marginBottom: SPACING.sm,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    marginBottom: SPACING.sm + 2,
   },
   featureIconBox: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: RADIUS.sm,
-    backgroundColor: '#F0FDFA',
+    backgroundColor: COLORS.primaryNavy,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.md,
@@ -211,27 +166,28 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: TYPOGRAPHY.sm,
     fontWeight: TYPOGRAPHY.bold,
-    color: COLORS.primaryNavy,
-    marginBottom: 2,
+    color: COLORS.white,
   },
   featureDesc: {
     fontSize: TYPOGRAPHY.xs,
-    color: COLORS.secondaryText,
+    color: '#94A3B8',
+    marginTop: 2,
     lineHeight: 16,
   },
   actionSection: {
-    paddingTop: SPACING.xs,
+    paddingBottom: SPACING.sm,
   },
   primaryBtn: {
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.sm + 2,
   },
   secondaryBtn: {
-    marginBottom: SPACING.sm,
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.white,
   },
   versionNote: {
     fontSize: TYPOGRAPHY.xs - 1,
-    color: COLORS.secondaryText,
+    color: '#64748B',
     textAlign: 'center',
-    marginTop: 2,
+    marginTop: SPACING.md,
   },
 });

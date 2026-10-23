@@ -8,10 +8,8 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -26,34 +24,26 @@ export const TicketDetailsScreen = ({
   onNavigateBack,
   onUpdateTicket,
 }) => {
-  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState(ticket?.messages || []);
   const [replyText, setReplyText] = useState('');
   const [isNoteMode, setIsNoteMode] = useState(false);
   const [ticketStatus, setTicketStatus] = useState(ticket?.status || 'open');
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const scrollViewRef = useRef(null);
 
   useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    if (ticket) {
+      setMessages(ticket.messages || []);
+      setTicketStatus(ticket.status || 'open');
+      setReplyText('');
+    }
+  }, [ticket?.id]);
 
-    const showSub = Keyboard.addListener(showEvent, () => {
-      setIsKeyboardVisible(true);
-      requestAnimationFrame(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      });
-    });
-
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      setIsKeyboardVisible(false);
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [messages.length]);
 
   const handleSendReply = () => {
     if (!replyText.trim()) return;
@@ -71,10 +61,6 @@ export const TicketDetailsScreen = ({
     const updatedMessages = [...messages, newMsg];
     setMessages(updatedMessages);
     setReplyText('');
-
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 60);
 
     if (onUpdateTicket) {
       onUpdateTicket({
@@ -115,7 +101,6 @@ export const TicketDetailsScreen = ({
             activeOpacity={0.7}
             onPress={isAgentOrAdmin ? handleToggleStatus : undefined}
             style={styles.statusChipBtn}
-            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
           >
             <StatusBadge status={ticketStatus} size="sm" />
           </TouchableOpacity>
@@ -126,9 +111,6 @@ export const TicketDetailsScreen = ({
         ref={scrollViewRef}
         style={styles.scrollArea}
         contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        showsVerticalScrollIndicator={false}
       >
         {/* Ticket Header & Metadata Card */}
         <View style={styles.metaCard}>
@@ -138,9 +120,7 @@ export const TicketDetailsScreen = ({
             <PriorityBadge priority={ticket.priority} />
             {ticket.category && (
               <View style={styles.categoryBadge}>
-                <Text style={styles.categoryBadgeText} numberOfLines={1}>
-                  {ticket.category}
-                </Text>
+                <Text style={styles.categoryBadgeText}>{ticket.category}</Text>
               </View>
             )}
           </View>
@@ -170,9 +150,7 @@ export const TicketDetailsScreen = ({
 
             <View style={styles.detailItem}>
               <Text style={styles.detailKey}>Assigned Agent</Text>
-              <Text style={styles.detailVal} numberOfLines={1}>
-                {ticket.assignedTo || 'Sayoni (Senior Support)'}
-              </Text>
+              <Text style={styles.detailVal}>{ticket.assignedTo || 'Sayoni (Senior Support)'}</Text>
             </View>
 
             <View style={styles.detailItem}>
@@ -187,6 +165,22 @@ export const TicketDetailsScreen = ({
               </Text>
             </View>
           </View>
+
+          {/* Attachments (if any attached on ticket creation) */}
+          {ticket.attachments && ticket.attachments.length > 0 && (
+            <View style={styles.attachmentsSection}>
+              <View style={styles.divider} />
+              <Text style={styles.descLabel}>Attachments ({ticket.attachments.length})</Text>
+              <View style={styles.attachmentsWrap}>
+                {ticket.attachments.map((file, idx) => (
+                  <View key={idx} style={styles.attachmentChip}>
+                    <Ionicons name="document-attach-outline" size={13} color={COLORS.primaryNavy} style={{ marginRight: 4 }} />
+                    <Text style={styles.attachmentChipText} numberOfLines={1}>{file}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Audit Timeline */}
@@ -210,36 +204,43 @@ export const TicketDetailsScreen = ({
 
         {/* Message Thread */}
         <View style={styles.threadSection}>
-          <Text style={styles.sectionHeading}>Conversation Thread</Text>
-          {messages.map((item) => {
-            const isUserSender =
-              user?.role === 'customer'
-                ? item.senderType === 'customer'
-                : item.senderType === 'agent';
-
-            return (
-              <ChatBubble
-                key={item.id}
-                senderType={item.senderType}
-                senderName={item.senderName}
-                message={item.content}
-                timestamp={item.time}
-                isOutgoing={isUserSender}
-              />
-            );
-          })}
+          <Text style={styles.sectionHeading}>Conversation History</Text>
+          {messages.map((item) => (
+            <ChatBubble
+              key={item.id}
+              senderType={item.senderType}
+              senderName={item.senderName}
+              message={item.content}
+              timestamp={item.time}
+              isOutgoing={
+                user?.role === 'agent'
+                  ? item.senderType === 'agent'
+                  : item.senderType === 'customer'
+              }
+            />
+          ))}
         </View>
       </ScrollView>
 
       {/* Reply Composer Bar */}
-      <View
-        style={[
-          styles.composerContainer,
-          {
-            paddingBottom: isKeyboardVisible ? 8 : Math.max(insets.bottom, 12),
-          },
-        ]}
-      >
+      <View style={styles.composerContainer}>
+        {/* AI Smart Draft Action */}
+        {ticket?.aiSmartDraft ? (
+          <View style={styles.aiDraftRow}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setReplyText(ticket.aiSmartDraft)}
+              style={styles.aiDraftBtn}
+            >
+              <Ionicons name="sparkles" size={13} color={COLORS.accentTeal} style={{ marginRight: 4 }} />
+              <Text style={styles.aiDraftBtnText}>Use AI Draft</Text>
+            </TouchableOpacity>
+            <Text style={styles.aiDraftPreview} numberOfLines={1}>
+              {ticket.aiSmartDraft}
+            </Text>
+          </View>
+        ) : null}
+
         {/* If agent/admin, show Internal Note toggle */}
         {isAgentOrAdmin && (
           <View style={styles.modeTabs}>
@@ -283,14 +284,6 @@ export const TicketDetailsScreen = ({
             value={replyText}
             onChangeText={setReplyText}
             style={styles.replyInput}
-            maxHeight={100}
-            textAlignVertical="center"
-            onFocus={() => {
-              setIsKeyboardVisible(true);
-              setTimeout(() => {
-                scrollViewRef.current?.scrollToEnd({ animated: true });
-              }, 120);
-            }}
           />
 
           <TouchableOpacity
@@ -307,7 +300,6 @@ export const TicketDetailsScreen = ({
                   : COLORS.border,
               },
             ]}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Ionicons name="arrow-up" size={18} color={COLORS.white} />
           </TouchableOpacity>
@@ -329,26 +321,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: SPACING.md,
-    paddingBottom: SPACING.lg,
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xxl,
   },
   metaCard: {
     backgroundColor: COLORS.white,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg,
   },
   badgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
     marginBottom: SPACING.sm,
   },
   categoryBadge: {
@@ -364,15 +350,15 @@ const styles = StyleSheet.create({
     fontWeight: TYPOGRAPHY.medium,
   },
   subject: {
-    fontSize: TYPOGRAPHY.base + 1,
+    fontSize: TYPOGRAPHY.lg,
     fontWeight: TYPOGRAPHY.bold,
     color: COLORS.mainText,
-    lineHeight: 22,
+    lineHeight: TYPOGRAPHY.lineHeightRelaxed,
   },
   divider: {
     height: 1,
     backgroundColor: COLORS.border,
-    marginVertical: SPACING.sm + 2,
+    marginVertical: SPACING.md,
   },
   descLabel: {
     fontSize: TYPOGRAPHY.xs,
@@ -384,7 +370,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: TYPOGRAPHY.sm,
     color: COLORS.mainText,
-    lineHeight: 20,
+    lineHeight: TYPOGRAPHY.lineHeightNormal,
   },
   detailsGrid: {
     flexDirection: 'row',
@@ -393,15 +379,15 @@ const styles = StyleSheet.create({
   },
   detailItem: {
     width: '48%',
-    marginBottom: SPACING.xs + 2,
+    marginBottom: SPACING.sm + 2,
   },
   detailKey: {
-    fontSize: TYPOGRAPHY.xs - 1,
+    fontSize: TYPOGRAPHY.xs,
     color: COLORS.secondaryText,
-    marginBottom: 1,
+    marginBottom: 2,
   },
   detailVal: {
-    fontSize: TYPOGRAPHY.xs + 1,
+    fontSize: TYPOGRAPHY.sm,
     fontWeight: TYPOGRAPHY.semiBold,
     color: COLORS.mainText,
   },
@@ -410,23 +396,18 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg,
   },
   sectionHeading: {
-    fontSize: TYPOGRAPHY.sm,
+    fontSize: TYPOGRAPHY.sm + 1,
     fontWeight: TYPOGRAPHY.bold,
     color: COLORS.primaryNavy,
-    marginBottom: SPACING.sm + 2,
+    marginBottom: SPACING.md,
   },
   timelineItem: {
     flexDirection: 'row',
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.sm + 2,
   },
   timelineDot: {
     width: 8,
@@ -458,25 +439,57 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   threadSection: {
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.md,
   },
   composerContainer: {
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    paddingHorizontal: SPACING.md,
-    paddingTop: 8,
+    padding: SPACING.md,
+  },
+  aiDraftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDFA',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#CCFBF1',
+    paddingVertical: 5,
+    paddingHorizontal: SPACING.sm,
+    marginBottom: SPACING.xs + 2,
+  },
+  aiDraftBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+    borderColor: '#99F6E4',
+    marginRight: SPACING.sm,
+  },
+  aiDraftBtnText: {
+    fontSize: TYPOGRAPHY.xs,
+    fontWeight: TYPOGRAPHY.bold,
+    color: COLORS.primaryNavy,
+  },
+  aiDraftPreview: {
+    flex: 1,
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.secondaryText,
+    fontStyle: 'italic',
   },
   modeTabs: {
     flexDirection: 'row',
-    marginBottom: 6,
+    marginBottom: SPACING.xs + 2,
   },
   modeTab: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: RADIUS.xs,
+    paddingHorizontal: 10,
+    borderRadius: RADIUS.sm,
     marginRight: SPACING.xs + 2,
     backgroundColor: COLORS.lightBg,
   },
@@ -487,7 +500,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
   },
   modeTabText: {
-    fontSize: TYPOGRAPHY.xs - 1,
+    fontSize: TYPOGRAPHY.xs,
     color: COLORS.secondaryText,
   },
   modeTabTextActive: {
@@ -496,22 +509,20 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: COLORS.lightBg,
-    borderRadius: 22,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingHorizontal: SPACING.md,
-    paddingVertical: 4,
-    minHeight: 44,
+    minHeight: 46,
   },
   replyInput: {
     flex: 1,
     fontSize: TYPOGRAPHY.sm,
     color: COLORS.mainText,
-    paddingVertical: Platform.OS === 'ios' ? 8 : 6,
+    paddingVertical: 8,
     maxHeight: 100,
-    textAlignVertical: 'center',
   },
   sendBtn: {
     width: 32,
@@ -520,6 +531,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: SPACING.xs,
-    marginBottom: 2,
+  },
+  attachmentsSection: {
+    marginTop: 2,
+  },
+  attachmentsWrap: {
+    marginTop: SPACING.xs,
+  },
+  attachmentChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.lightBg,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingVertical: 5,
+    paddingHorizontal: SPACING.sm,
+    marginBottom: 4,
+  },
+  attachmentChipText: {
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.mainText,
+    flex: 1,
   },
 });

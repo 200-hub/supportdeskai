@@ -1,16 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, StatusBar, Appearance } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { StyleSheet, SafeAreaView, View, StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { COLORS } from './src/theme/colors';
-
-// Explicitly lock app appearance to fixed light mode
-if (Appearance && Appearance.setColorScheme) {
-  try {
-    Appearance.setColorScheme('light');
-  } catch (e) {
-    // Ignore if not supported in environment
-  }
-}
 import {
   INITIAL_USER,
   INITIAL_TICKETS,
@@ -18,48 +9,47 @@ import {
   INITIAL_NOTIFICATIONS,
 } from './src/data/mockData';
 
-// Reusable Navigation
 import { BottomNavigation } from './src/components/common/BottomNavigation';
 
 // All 14 Screens
-import { WelcomeScreen } from './src/screens/WelcomeScreen'; // Screen 1
-import { LoginScreen } from './src/screens/LoginScreen'; // Screen 2
-import { RegistrationScreen } from './src/screens/RegistrationScreen'; // Screen 3
-import { CustomerHomeScreen } from './src/screens/CustomerHomeScreen'; // Screen 4
-import { AIChatScreen } from './src/screens/AIChatScreen'; // Screen 5
-import { ConversationHistoryScreen } from './src/screens/ConversationHistoryScreen'; // Screen 6
-import { MyTicketsScreen } from './src/screens/MyTicketsScreen'; // Screen 7
-import { CreateTicketScreen } from './src/screens/CreateTicketScreen'; // Screen 8
-import { TicketDetailsScreen } from './src/screens/TicketDetailsScreen'; // Screen 9
-import { HelpCenterScreen } from './src/screens/HelpCenterScreen'; // Screen 10
-import { AgentDashboardScreen } from './src/screens/AgentDashboardScreen'; // Screen 11
-import { NotificationsScreen } from './src/screens/NotificationsScreen'; // Screen 12
-import { ProfileScreen } from './src/screens/ProfileScreen'; // Screen 13
-import { AdminSettingsScreen } from './src/screens/AdminSettingsScreen'; // Screen 14
+import { WelcomeScreen } from './src/screens/WelcomeScreen';
+import { LoginScreen } from './src/screens/LoginScreen';
+import { RegistrationScreen } from './src/screens/RegistrationScreen';
+import { CustomerHomeScreen } from './src/screens/CustomerHomeScreen';
+import { AIChatScreen } from './src/screens/AIChatScreen';
+import { ConversationHistoryScreen } from './src/screens/ConversationHistoryScreen';
+import { MyTicketsScreen } from './src/screens/MyTicketsScreen';
+import { CreateTicketScreen } from './src/screens/CreateTicketScreen';
+import { TicketDetailsScreen } from './src/screens/TicketDetailsScreen';
+import { HelpCenterScreen } from './src/screens/HelpCenterScreen';
+import { AgentDashboardScreen } from './src/screens/AgentDashboardScreen';
+import { NotificationsScreen } from './src/screens/NotificationsScreen';
+import { ProfileScreen } from './src/screens/ProfileScreen';
+import { AdminSettingsScreen } from './src/screens/AdminSettingsScreen';
 
 export default function App() {
-  // Authentication state: 'welcome' | 'login' | 'register' | null (authenticated)
+  // Authentication state
   const [authScreen, setAuthScreen] = useState('welcome');
 
-  // User state with role: 'customer' | 'agent' | 'admin'
+  // Current user
   const [currentUser, setCurrentUser] = useState(INITIAL_USER);
 
-  // Customer navigation tab: 'home' | 'tickets' | 'chat' | 'help' | 'profile'
+  // Customer navigation tab
   const [customerTab, setCustomerTab] = useState('home');
 
-  // Modal / Detailed Screen overlay:
-  // null | 'create_ticket' | 'ticket_details' | 'conversation_history' | 'notifications' | 'agent_dashboard' | 'admin_settings'
+  // Active overlay
   const [activeOverlay, setActiveOverlay] = useState(null);
 
-  // Data states
+  // Application data
   const [tickets, setTickets] = useState(INITIAL_TICKETS);
   const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [ticketFilter, setTicketFilter] = useState('all');
 
-  // Handlers for Authentication
+  // Authentication handlers
   const handleGetStarted = () => setAuthScreen('register');
   const handleGoToLogin = () => setAuthScreen('login');
   const handleGoToRegister = () => setAuthScreen('register');
@@ -74,19 +64,15 @@ export default function App() {
         role === 'agent'
           ? 'Sayoni Bhattacharjee'
           : role === 'admin'
-          ? 'Admin Sayoni'
-          : 'Sarah Connor',
+            ? 'Admin Sayoni'
+            : 'Sarah Connor',
       avatarInitials:
-        role === 'agent'
-          ? 'SB'
-          : role === 'admin'
-          ? 'AS'
-          : 'SC',
+        role === 'agent' ? 'SB' : role === 'admin' ? 'AS' : 'SC',
     };
+
     setCurrentUser(updatedUser);
     setAuthScreen(null);
 
-    // If agent or admin, open respective view directly
     if (role === 'agent') {
       setActiveOverlay('agent_dashboard');
     } else if (role === 'admin') {
@@ -105,32 +91,34 @@ export default function App() {
       role: role || 'customer',
       avatarInitials: name
         .split(' ')
-        .map((p) => p[0])
+        .map((part) => part[0])
         .join('')
         .toUpperCase()
         .slice(0, 2),
     });
+
     setAuthScreen(null);
     setActiveOverlay(null);
     setCustomerTab('home');
   };
 
   const handleLogout = () => {
+    setCurrentUser(INITIAL_USER);
     setAuthScreen('welcome');
     setActiveOverlay(null);
     setCustomerTab('home');
   };
 
-  // Handlers for Tickets & Chat
+  // Ticket handlers
   const handleOpenTicketDetails = (ticket) => {
     setSelectedTicket(ticket);
     setActiveOverlay('ticket_details');
   };
 
   const handleCreateTicket = (newTicket) => {
-    setTickets((prev) => [newTicket, ...prev]);
-    // Also create a notification
-    const newNotif = {
+    setTickets((previous) => [newTicket, ...previous]);
+
+    const newNotification = {
       id: `notif-${Date.now()}`,
       title: `Ticket #${newTicket.id} Created`,
       description: `Subject: ${newTicket.subject}`,
@@ -139,38 +127,54 @@ export default function App() {
       isRead: false,
       ticketId: newTicket.id,
     };
-    setNotifications((prev) => [newNotif, ...prev]);
+
+    setNotifications((previous) => [
+      newNotification,
+      ...previous,
+    ]);
   };
 
-  const handleUpdateTicket = (updated) => {
-    setTickets((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-    if (selectedTicket && selectedTicket.id === updated.id) {
-      setSelectedTicket(updated);
+  const handleUpdateTicket = (updatedTicket) => {
+    setTickets((previous) =>
+      previous.map((ticket) =>
+        ticket.id === updatedTicket.id ? updatedTicket : ticket
+      )
+    );
+
+    if (selectedTicket?.id === updatedTicket.id) {
+      setSelectedTicket(updatedTicket);
     }
   };
 
-  const handleOpenChatWithConv = (conv) => {
-    setSelectedConversation(conv);
+  const handleOpenChatWithConv = (conversation) => {
+    setSelectedConversation(conversation);
     setActiveOverlay(null);
     setCustomerTab('chat');
   };
 
   const handleMarkAllNotificationsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setNotifications((previous) =>
+      previous.map((notification) => ({
+        ...notification,
+        isRead: true,
+      }))
+    );
   };
 
-  // Persona / Role Switcher toggle (Customer -> Agent -> Admin -> Customer)
+  // Role switcher
   const handleCycleRole = (explicitRole) => {
     const nextRole =
       explicitRole ||
       (currentUser.role === 'customer'
         ? 'agent'
         : currentUser.role === 'agent'
-        ? 'admin'
-        : 'customer');
+          ? 'admin'
+          : 'customer');
 
-    const updated = { ...currentUser, role: nextRole };
-    setCurrentUser(updated);
+    setCurrentUser({
+      ...currentUser,
+      role: nextRole,
+    });
 
     if (nextRole === 'agent') {
       setActiveOverlay('agent_dashboard');
@@ -182,9 +186,9 @@ export default function App() {
     }
   };
 
-  // Screen Rendering Logic
+  // Screen rendering
   const renderScreen = () => {
-    // 1. Unauthenticated screens
+    // Authentication screens
     if (authScreen === 'welcome') {
       return (
         <WelcomeScreen
@@ -214,7 +218,7 @@ export default function App() {
       );
     }
 
-    // 2. Overlay / Modal Screens (Can be opened from anywhere)
+    // Ticket details
     if (activeOverlay === 'ticket_details' && selectedTicket) {
       return (
         <TicketDetailsScreen
@@ -226,16 +230,19 @@ export default function App() {
       );
     }
 
+    // Create ticket
     if (activeOverlay === 'create_ticket') {
       return (
         <CreateTicketScreen
           user={currentUser}
           onCreateTicket={handleCreateTicket}
           onNavigateBack={() => setActiveOverlay(null)}
+          onViewTicket={handleOpenTicketDetails}
         />
       );
     }
 
+    // Conversation history
     if (activeOverlay === 'conversation_history') {
       return (
         <ConversationHistoryScreen
@@ -251,18 +258,23 @@ export default function App() {
       );
     }
 
+    // Notifications
     if (activeOverlay === 'notifications') {
       return (
         <NotificationsScreen
           notifications={notifications}
-          onSelectNotification={(notif) => {
-            if (notif.ticketId) {
-              const matched = tickets.find((t) => t.id === notif.ticketId);
-              if (matched) {
-                handleOpenTicketDetails(matched);
+          onSelectNotification={(notification) => {
+            if (notification.ticketId) {
+              const matchedTicket = tickets.find(
+                (ticket) => ticket.id === notification.ticketId
+              );
+
+              if (matchedTicket) {
+                handleOpenTicketDetails(matchedTicket);
                 return;
               }
             }
+
             setActiveOverlay(null);
           }}
           onMarkAllAsRead={handleMarkAllNotificationsRead}
@@ -271,35 +283,41 @@ export default function App() {
       );
     }
 
-    if (activeOverlay === 'agent_dashboard' || currentUser.role === 'agent') {
+    // Agent dashboard
+    if (
+      activeOverlay === 'agent_dashboard' ||
+      currentUser.role === 'agent'
+    ) {
       return (
         <AgentDashboardScreen
           user={currentUser}
           tickets={tickets}
           onSelectTicket={handleOpenTicketDetails}
           onSwitchRole={() => handleCycleRole()}
-          onNavigateToNotifications={() => setActiveOverlay('notifications')}
-          onNavigateBack={() => {
-            handleCycleRole('customer');
-          }}
+          onNavigateToNotifications={() =>
+            setActiveOverlay('notifications')
+          }
+          onNavigateBack={() => handleCycleRole('customer')}
         />
       );
     }
 
-    if (activeOverlay === 'admin_settings' || currentUser.role === 'admin') {
+    // Admin settings
+    if (
+      activeOverlay === 'admin_settings' ||
+      currentUser.role === 'admin'
+    ) {
       return (
         <AdminSettingsScreen
           user={currentUser}
-          onNavigateBack={() => {
-            handleCycleRole('customer');
-          }}
+          onNavigateBack={() => handleCycleRole('customer')}
           onSwitchRole={() => handleCycleRole()}
           onLogout={handleLogout}
         />
       );
     }
 
-    // 3. Customer Tab Screens
+    // Customer tabs
     switch (customerTab) {
       case 'home':
         return (
@@ -313,14 +331,22 @@ export default function App() {
               setTicketFilter(filter || 'all');
               setCustomerTab('tickets');
             }}
-            onNavigateToCreateTicket={() => setActiveOverlay('create_ticket')}
-            onNavigateToChat={(conv) => {
-              if (conv) setSelectedConversation(conv);
+            onNavigateToCreateTicket={() =>
+              setActiveOverlay('create_ticket')
+            }
+            onNavigateToChat={(conversation) => {
+              if (conversation) {
+                setSelectedConversation(conversation);
+              }
               setCustomerTab('chat');
             }}
-            onNavigateToHistory={() => setActiveOverlay('conversation_history')}
+            onNavigateToHistory={() =>
+              setActiveOverlay('conversation_history')
+            }
             onNavigateToHelpCenter={() => setCustomerTab('help')}
-            onNavigateToNotifications={() => setActiveOverlay('notifications')}
+            onNavigateToNotifications={() =>
+              setActiveOverlay('notifications')
+            }
             onSwitchRole={() => handleCycleRole()}
           />
         );
@@ -331,7 +357,9 @@ export default function App() {
             tickets={tickets}
             initialFilter={ticketFilter}
             onSelectTicket={handleOpenTicketDetails}
-            onNavigateToCreateTicket={() => setActiveOverlay('create_ticket')}
+            onNavigateToCreateTicket={() =>
+              setActiveOverlay('create_ticket')
+            }
           />
         );
 
@@ -340,15 +368,21 @@ export default function App() {
           <AIChatScreen
             initialConversation={selectedConversation}
             onNavigateBack={() => setCustomerTab('home')}
-            onNavigateToHistory={() => setActiveOverlay('conversation_history')}
-            onEscalateToTicket={() => setActiveOverlay('create_ticket')}
+            onNavigateToHistory={() =>
+              setActiveOverlay('conversation_history')
+            }
+            onEscalateToTicket={() =>
+              setActiveOverlay('create_ticket')
+            }
           />
         );
 
       case 'help':
         return (
           <HelpCenterScreen
-            onNavigateToCreateTicket={() => setActiveOverlay('create_ticket')}
+            onNavigateToCreateTicket={() =>
+              setActiveOverlay('create_ticket')
+            }
             onNavigateToChat={() => setCustomerTab('chat')}
           />
         );
@@ -359,7 +393,9 @@ export default function App() {
             user={currentUser}
             onUpdateUser={setCurrentUser}
             onNavigateToHelpCenter={() => setCustomerTab('help')}
-            onNavigateToAdminSettings={() => setActiveOverlay('admin_settings')}
+            onNavigateToAdminSettings={() =>
+              setActiveOverlay('admin_settings')
+            }
             onSwitchRole={(role) => handleCycleRole(role)}
             onLogout={handleLogout}
           />
@@ -374,11 +410,17 @@ export default function App() {
             notifications={notifications}
             onNavigateToTicketDetails={handleOpenTicketDetails}
             onNavigateToMyTickets={() => setCustomerTab('tickets')}
-            onNavigateToCreateTicket={() => setActiveOverlay('create_ticket')}
+            onNavigateToCreateTicket={() =>
+              setActiveOverlay('create_ticket')
+            }
             onNavigateToChat={() => setCustomerTab('chat')}
-            onNavigateToHistory={() => setActiveOverlay('conversation_history')}
+            onNavigateToHistory={() =>
+              setActiveOverlay('conversation_history')
+            }
             onNavigateToHelpCenter={() => setCustomerTab('help')}
-            onNavigateToNotifications={() => setActiveOverlay('notifications')}
+            onNavigateToNotifications={() =>
+              setActiveOverlay('notifications')
+            }
             onSwitchRole={() => handleCycleRole()}
           />
         );
@@ -394,26 +436,13 @@ export default function App() {
   const unreadTicketsCount = tickets.filter((t) => t.status === 'open').length;
   const unreadNotifsCount = notifications.filter((n) => !n.isRead).length;
 
-  const isAuthScreen = authScreen !== null;
-
   return (
     <SafeAreaProvider>
-      <StatusBar
-        barStyle={isAuthScreen ? 'dark-content' : 'light-content'}
-        backgroundColor={isAuthScreen ? COLORS.lightBg : COLORS.primaryNavy}
-        translucent={false}
-      />
-      <SafeAreaView
-        style={[
-          styles.safeArea,
-          { backgroundColor: isAuthScreen ? COLORS.lightBg : COLORS.primaryNavy },
-        ]}
-        edges={['top']}
-      >
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryNavy} />
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           {renderScreen()}
 
-          {/* Customer Bottom Navigation Bar */}
           {showBottomNav && (
             <BottomNavigation
               currentTab={customerTab}
