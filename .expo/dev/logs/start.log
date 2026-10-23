@@ -605,3 +605,36 @@
 {"_e":"metro:config","_t":1792754743099,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
 {"_e":"expo:dev-tools-plugin:load","_t":1792754743413,"plugins":[]}
 {"_e":"metro:instantiate","_t":1792754745705,"atlas":false,"workers":6,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1792754778703,"id":"3","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1792754778703,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792754778712,"id":"3","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792754778811,"id":"3","progress":0.029541015625,"total":64,"current":11}
+{"_e":"metro:bundling:progress","_t":1792754778911,"id":"3","progress":0.11296293107901037,"total":241,"current":81}
+{"_e":"metro:bundling:progress","_t":1792754779011,"id":"3","progress":0.31001143330698816,"total":361,"current":201}
+{"_e":"metro:bundling:progress","_t":1792754779114,"id":"3","progress":0.39003559985760056,"total":530,"current":331}
+{"_e":"metro:bundling:progress","_t":1792754779214,"id":"3","progress":0.7300512738343214,"total":632,"current":540}
+{"_e":"metro:bundling:progress","_t":1792754779314,"id":"3","progress":0.824492636253909,"total":761,"current":691}
+{"_e":"metro:bundling:done","_t":1792754779433,"id":"3","total":761,"ms":730.4421}
+{"_e":"metro:client_log","_t":1792754867111,"level":"error","data":["Project is incompatible with this version of Expo Go\n\n• The installed version of Expo Go is for SDK 58.\n• The project you opened uses SDK 57.\n\nHow to fix this error:\nEither upgrade this project to SDK 58 or install an older version of Expo Go that is compatible with your project.\n\n<a href='https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/'>Learn how to upgrade to SDK 58.</a>\n\n<a href='https://expo.dev/go?sdkVersion=57&platform=android&device=true'>Learn how to install Expo Go for SDK 57</a>."]}
+{"_e":"metro:client_log","_t":1792754881183,"level":"error","data":["Project is incompatible with this version of Expo Go\n\n• The installed version of Expo Go is for SDK 58.\n• The project you opened uses SDK 57.\n\nHow to fix this error:\nEither upgrade this project to SDK 58 or install an older version of Expo Go that is compatible with your project.\n\n<a href='https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/'>Learn how to upgrade to SDK 58.</a>\n\n<a href='https://expo.dev/go?sdkVersion=57&platform=android&device=true'>Learn how to install Expo Go for SDK 57</a>."]}
+{"_e":"metro:bundling:started","_t":1792754931868,"id":"4","platform":"web","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1792754931869,"id":"4","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792754931873,"id":"4","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1792754931975,"id":"4","progress":0.034293552812071325,"total":54,"current":10}
+{"_e":"metro:bundling:progress","_t":1792754932074,"id":"4","progress":0.1240960743801653,"total":88,"current":31}
+{"_e":"metro:bundling:progress","_t":1792754932174,"id":"4","progress":0.16000000000000003,"total":130,"current":52}
+{"_e":"metro:bundling:progress","_t":1792754932276,"id":"4","progress":0.24077003202036956,"total":161,"current":79}
+{"_e":"metro:bundling:progress","_t":1792754932375,"id":"4","progress":0.39146100832165626,"total":187,"current":117}
+{"_e":"metro:bundling:progress","_t":1792754932475,"id":"4","progress":0.429991937651169,"total":244,"current":160}
+{"_e":"metro:bundling:progress","_t":1792754932575,"id":"4","progress":0.7082052172188058,"total":284,"current":239}
+{"_e":"metro:bundling:progress","_t":1792754932675,"id":"4","progress":0.8741960528712056,"total":323,"current":302}
+{"_e":"metro:bundling:progress","_t":1792754932777,"id":"4","progress":0.9575645623845496,"total":373,"current":365}
+{"_e":"metro:bundling:progress","_t":1792754932877,"id":"4","progress":0.9637805152397249,"total":383,"current":376}
+{"_e":"metro:bundling:done","_t":1792754932995,"id":"4","total":383,"ms":1126.1344}
+{"_e":"metro:client_log","_t":1792754933308,"level":"info","data":["%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools","font-weight:bold"]}
+{"_e":"metro:client_log","_t":1792754933308,"level":"log","data":["Running application \"main\" with appParams:\n","{\"hydrate\": undefined, \"rootTag\": \"#root\"}","\nDevelopment-level warnings: ON.\nPerformance optimizations: OFF."]}
+{"_e":"metro:client_log","_t":1792754970533,"level":"error","data":["Project is incompatible with this version of Expo Go\n\n• The installed version of Expo Go is for SDK 58.\n• The project you opened uses SDK 57.\n\nHow to fix this error:\nEither upgrade this project to SDK 58 or install an older version of Expo Go that is compatible with your project.\n\n<a href='https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/'>Learn how to upgrade to SDK 58.</a>\n\n<a href='https://expo.dev/go?sdkVersion=57&platform=android&device=true'>Learn how to install Expo Go for SDK 57</a>."]}
+{"_e":"metro:client_log","_t":1792755114514,"level":"error","data":["Project is incompatible with this version of Expo Go\n\n• The installed version of Expo Go is for SDK 58.\n• The project you opened uses SDK 57.\n\nHow to fix this error:\nEither upgrade this project to SDK 58 or install an older version of Expo Go that is compatible with your project.\n\n<a href='https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/'>Learn how to upgrade to SDK 58.</a>\n\n<a href='https://expo.dev/go?sdkVersion=57&platform=android&device=true'>Learn how to install Expo Go for SDK 57</a>."]}
+{"_e":"metro:bundling:started","_t":1792755221820,"id":"9","platform":"android","environment":null,"entry":"index.js"}
+{"_e":"metro:bundling:progress","_t":1792755221820,"id":"9","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:done","_t":1792755221871,"id":"9","total":1,"ms":50.3204}
