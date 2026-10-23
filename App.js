@@ -430,7 +430,7 @@ export default function App() {
   const showBottomNav =
     authScreen === null &&
     activeOverlay === null &&
-    currentUser.role === 'customer' &&
+   currentUser.role === 'customer' &&
     customerTab !== 'chat';
 
   const unreadTicketsCount = tickets.filter((t) => t.status === 'open').length;
