@@ -133,8 +133,8 @@ export const AIChatScreen = ({
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={0}
     >
       {/* Top Header */}
       <View style={styles.chatHeader}>
@@ -310,7 +310,9 @@ export const AIChatScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    minHeight: 0,
     backgroundColor: COLORS.lightBg,
+    overflow: 'hidden',
   },
   chatHeader: {
     backgroundColor: COLORS.primaryNavy,
@@ -410,6 +412,7 @@ const styles = StyleSheet.create({
   },
   messageScroll: {
     flex: 1,
+    minHeight: 0,
   },
   messageContent: {
     padding: SPACING.md,
@@ -467,8 +470,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     paddingHorizontal: SPACING.md,
     paddingTop: 8,
+    paddingBottom: 8,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+    flexShrink: 0,
   },
   inputWrapper: {
     flexDirection: 'row',
