@@ -435,7 +435,8 @@ export default function App() {
   const showBottomNav =
     authScreen === null &&
     activeOverlay === null &&
-    currentUser.role === 'customer';
+    currentUser.role === 'customer' &&
+    customerTab !== 'chat'; // Hide bottom nav on chat tab so AIChatScreen fills the full screen
 
   const unreadTicketsCount = tickets.filter(
     (ticket) => ticket.status === 'open'

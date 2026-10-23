@@ -10,6 +10,7 @@ import {
   Platform,
   Keyboard,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
@@ -37,6 +38,7 @@ export const AIChatScreen = ({
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (initialConversation?.messages) {
@@ -238,7 +240,7 @@ export const AIChatScreen = ({
       </View>
 
       {/* Message Composer */}
-      <View style={styles.composerBar}>
+      <View style={[styles.composerBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 8 }]}>
         <View style={styles.inputWrapper}>
           <TextInput
             placeholder="Type your question or request..."
