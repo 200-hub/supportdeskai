@@ -11,6 +11,7 @@ export const ChatBubble = ({
   timestamp,
   senderName,
   isDemo = false,
+  isOutgoing,
 }) => {
   const isCustomer = senderType === 'customer';
   const isInternalNote = senderType === 'internal_note';
@@ -34,46 +35,53 @@ export const ChatBubble = ({
     );
   }
 
+  // Determine if this bubble should be aligned as outgoing (right) or incoming (left)
+  const isOutgoingBubble =
+    isOutgoing !== undefined ? isOutgoing : !isAssistant && isCustomer;
+
+  const getBubbleStyle = () => {
+    if (isOutgoingBubble) {
+      return styles.outgoingBubble;
+    }
+    if (isAssistant) {
+      return styles.assistantBubble;
+    }
+    if (isCustomer) {
+      return styles.customerBubble;
+    }
+    return styles.incomingAgentBubble;
+  };
+
   return (
     <View
       style={[
         styles.bubbleContainer,
-        isCustomer ? styles.customerAlign : styles.agentAlign,
+        isOutgoingBubble ? styles.outgoingAlign : styles.incomingAlign,
       ]}
     >
-      <View style={styles.headerRow}>
-        {!isCustomer && senderName && <Text style={styles.senderLabel}>{senderName}</Text>}
-        {isCustomer && senderName && <Text style={styles.senderLabel}>{senderName}</Text>}
-        {isAssistant && (
+      <View
+        style={[
+          styles.headerRow,
+          isOutgoingBubble ? styles.headerRowOutgoing : styles.headerRowIncoming,
+        ]}
+      >
+        {!isOutgoingBubble && isAssistant && (
           <View style={styles.aiPill}>
             <Ionicons name="sparkles" size={10} color={COLORS.accentTeal} style={{ marginRight: 2 }} />
             <Text style={styles.aiPillText}>AI Assistant</Text>
           </View>
         )}
+        {senderName ? <Text style={styles.senderLabel}>{senderName}</Text> : null}
         <Text style={styles.timestamp}>{timestamp}</Text>
       </View>
 
-      <View
-        style={[
-          styles.bubble,
-          isCustomer
-            ? styles.customerBubble
-            : isAssistant
-            ? styles.assistantBubble
-            : styles.agentBubble,
-        ]}
-      >
-        <Text
-          style={[
-            styles.messageText,
-            isCustomer || isAssistant ? styles.darkText : styles.lightText,
-          ]}
-        >
+      <View style={[styles.bubble, getBubbleStyle()]}>
+        <Text style={[styles.messageText, isOutgoingBubble ? styles.lightText : styles.darkText]}>
           {message}
         </Text>
       </View>
 
-      {isDemo && !isCustomer && (
+      {isDemo && !isOutgoingBubble && (
         <Text style={styles.demoNotice}>• Demo simulated response</Text>
       )}
     </View>
@@ -85,16 +93,22 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     maxWidth: '85%',
   },
-  customerAlign: {
+  incomingAlign: {
     alignSelf: 'flex-start',
   },
-  agentAlign: {
+  outgoingAlign: {
     alignSelf: 'flex-end',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 4,
+  },
+  headerRowIncoming: {
+    justifyContent: 'flex-start',
+  },
+  headerRowOutgoing: {
+    justifyContent: 'flex-end',
   },
   senderLabel: {
     fontSize: TYPOGRAPHY.xs,
@@ -124,6 +138,10 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
   },
+  outgoingBubble: {
+    backgroundColor: COLORS.primaryNavy,
+    borderTopRightRadius: RADIUS.xs,
+  },
   customerBubble: {
     backgroundColor: COLORS.white,
     borderWidth: 1,
@@ -134,11 +152,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0FDFA',
     borderWidth: 1,
     borderColor: '#99F6E4',
-    borderTopRightRadius: RADIUS.xs,
+    borderTopLeftRadius: RADIUS.xs,
   },
-  agentBubble: {
-    backgroundColor: COLORS.primaryNavy,
-    borderTopRightRadius: RADIUS.xs,
+  incomingAgentBubble: {
+    backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    borderTopLeftRadius: RADIUS.xs,
   },
   messageText: {
     fontSize: TYPOGRAPHY.sm,
@@ -154,7 +174,7 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.xs - 2,
     color: COLORS.secondaryText,
     marginTop: 2,
-    alignSelf: 'flex-end',
+    alignSelf: 'flex-start',
     fontStyle: 'italic',
   },
   noteWrapper: {

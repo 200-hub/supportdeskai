@@ -8,7 +8,14 @@ import { StatusBadge } from '../common/StatusBadge';
 import { PriorityBadge } from '../common/PriorityBadge';
 import { Avatar } from '../common/Avatar';
 
-export const TicketCard = ({ ticket, onPress, showCustomer = true }) => {
+export const TicketCard = ({
+  ticket,
+  onPress,
+  showCustomer = true,
+  showAssignee = false,
+  onClaimTicket,
+  onAssignTicket,
+}) => {
   const getChannelIcon = (channel) => {
     switch (channel) {
       case 'email':
@@ -30,6 +37,9 @@ export const TicketCard = ({ ticket, onPress, showCustomer = true }) => {
     (ticket.messages && ticket.messages.length > 0
       ? ticket.messages[0].content
       : 'No description provided.');
+  const assignedTo = ticket.assignedTo || '';
+  const isUnassigned =
+    !assignedTo || assignedTo.trim() === '' || assignedTo === 'Auto-Routing Queue';
 
   return (
     <TouchableOpacity
@@ -115,6 +125,67 @@ export const TicketCard = ({ ticket, onPress, showCustomer = true }) => {
             )}
           </View>
           <Text style={styles.timeAgo}>{ticket.updatedAt || 'Recent'}</Text>
+        </View>
+      )}
+
+      {/* Assignee Row */}
+      {showAssignee && (
+        <View style={styles.assigneeRow}>
+          <View style={styles.assigneeLeft}>
+            <Ionicons
+              name={isUnassigned ? 'help-circle-outline' : 'person-outline'}
+              size={13}
+              color={isUnassigned ? COLORS.warning : COLORS.primaryNavy}
+              style={{ marginRight: 4 }}
+            />
+            <Text style={styles.assigneeLabel}>Assigned to:</Text>
+            <View
+              style={[
+                styles.assigneeBadge,
+                isUnassigned ? styles.unassignedBadge : styles.assignedBadge,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.assigneeText,
+                  isUnassigned ? styles.unassignedText : styles.assignedText,
+                ]}
+                numberOfLines={1}
+              >
+                {isUnassigned ? 'Unassigned' : assignedTo}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.assigneeActions}>
+            {isUnassigned && onClaimTicket && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={styles.claimBtn}
+                onPress={(e) => {
+                  e?.stopPropagation?.();
+                  onClaimTicket(ticket);
+                }}
+              >
+                <Ionicons name="hand-right-outline" size={11} color={COLORS.white} style={{ marginRight: 3 }} />
+                <Text style={styles.claimBtnText}>Claim</Text>
+              </TouchableOpacity>
+            )}
+            {onAssignTicket && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={styles.reassignBtn}
+                onPress={(e) => {
+                  e?.stopPropagation?.();
+                  onAssignTicket(ticket);
+                }}
+              >
+                <Text style={styles.reassignBtnText}>
+                  {isUnassigned ? 'Assign' : 'Change'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       )}
 
@@ -241,6 +312,82 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: TYPOGRAPHY.xs - 1,
+    color: COLORS.secondaryText,
+  },
+  assigneeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 6,
+    marginBottom: SPACING.sm + 2,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  assigneeLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: SPACING.xs,
+  },
+  assigneeLabel: {
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.secondaryText,
+    marginRight: 5,
+  },
+  assigneeBadge: {
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    maxWidth: 130,
+  },
+  assignedBadge: {
+    backgroundColor: '#EEF2FF',
+  },
+  unassignedBadge: {
+    backgroundColor: '#FEF3C7',
+  },
+  assigneeText: {
+    fontSize: TYPOGRAPHY.xs,
+    fontWeight: TYPOGRAPHY.semiBold,
+  },
+  assignedText: {
+    color: COLORS.primaryNavy,
+  },
+  unassignedText: {
+    color: COLORS.warning,
+  },
+  assigneeActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  claimBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.accentTeal,
+    borderRadius: RADIUS.xs,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+  },
+  claimBtnText: {
+    fontSize: TYPOGRAPHY.xs,
+    fontWeight: TYPOGRAPHY.bold,
+    color: COLORS.white,
+  },
+  reassignBtn: {
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: RADIUS.xs,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  reassignBtnText: {
+    fontSize: TYPOGRAPHY.xs,
+    fontWeight: TYPOGRAPHY.medium,
     color: COLORS.secondaryText,
   },
 });

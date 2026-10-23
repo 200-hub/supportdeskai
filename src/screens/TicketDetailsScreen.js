@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,22 @@ export const TicketDetailsScreen = ({
   const [replyText, setReplyText] = useState('');
   const [isNoteMode, setIsNoteMode] = useState(false);
   const [ticketStatus, setTicketStatus] = useState(ticket?.status || 'open');
+  const scrollViewRef = useRef(null);
+
+  useEffect(() => {
+    if (ticket) {
+      setMessages(ticket.messages || []);
+      setTicketStatus(ticket.status || 'open');
+      setReplyText('');
+    }
+  }, [ticket?.id]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [messages.length]);
 
   const handleSendReply = () => {
     if (!replyText.trim()) return;
@@ -91,7 +107,11 @@ export const TicketDetailsScreen = ({
         }
       />
 
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.scrollArea}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Ticket Header & Metadata Card */}
         <View style={styles.metaCard}>
           <View style={styles.badgesRow}>
@@ -145,6 +165,22 @@ export const TicketDetailsScreen = ({
               </Text>
             </View>
           </View>
+
+          {/* Attachments (if any attached on ticket creation) */}
+          {ticket.attachments && ticket.attachments.length > 0 && (
+            <View style={styles.attachmentsSection}>
+              <View style={styles.divider} />
+              <Text style={styles.descLabel}>Attachments ({ticket.attachments.length})</Text>
+              <View style={styles.attachmentsWrap}>
+                {ticket.attachments.map((file, idx) => (
+                  <View key={idx} style={styles.attachmentChip}>
+                    <Ionicons name="document-attach-outline" size={13} color={COLORS.primaryNavy} style={{ marginRight: 4 }} />
+                    <Text style={styles.attachmentChipText} numberOfLines={1}>{file}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Audit Timeline */}
@@ -176,6 +212,11 @@ export const TicketDetailsScreen = ({
               senderName={item.senderName}
               message={item.content}
               timestamp={item.time}
+              isOutgoing={
+                user?.role === 'agent'
+                  ? item.senderType === 'agent'
+                  : item.senderType === 'customer'
+              }
             />
           ))}
         </View>
@@ -183,6 +224,23 @@ export const TicketDetailsScreen = ({
 
       {/* Reply Composer Bar */}
       <View style={styles.composerContainer}>
+        {/* AI Smart Draft Action */}
+        {ticket?.aiSmartDraft ? (
+          <View style={styles.aiDraftRow}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setReplyText(ticket.aiSmartDraft)}
+              style={styles.aiDraftBtn}
+            >
+              <Ionicons name="sparkles" size={13} color={COLORS.accentTeal} style={{ marginRight: 4 }} />
+              <Text style={styles.aiDraftBtnText}>Use AI Draft</Text>
+            </TouchableOpacity>
+            <Text style={styles.aiDraftPreview} numberOfLines={1}>
+              {ticket.aiSmartDraft}
+            </Text>
+          </View>
+        ) : null}
+
         {/* If agent/admin, show Internal Note toggle */}
         {isAgentOrAdmin && (
           <View style={styles.modeTabs}>
@@ -389,6 +447,39 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.border,
     padding: SPACING.md,
   },
+  aiDraftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDFA',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#CCFBF1',
+    paddingVertical: 5,
+    paddingHorizontal: SPACING.sm,
+    marginBottom: SPACING.xs + 2,
+  },
+  aiDraftBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+    borderColor: '#99F6E4',
+    marginRight: SPACING.sm,
+  },
+  aiDraftBtnText: {
+    fontSize: TYPOGRAPHY.xs,
+    fontWeight: TYPOGRAPHY.bold,
+    color: COLORS.primaryNavy,
+  },
+  aiDraftPreview: {
+    flex: 1,
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.secondaryText,
+    fontStyle: 'italic',
+  },
   modeTabs: {
     flexDirection: 'row',
     marginBottom: SPACING.xs + 2,
@@ -440,5 +531,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: SPACING.xs,
+  },
+  attachmentsSection: {
+    marginTop: 2,
+  },
+  attachmentsWrap: {
+    marginTop: SPACING.xs,
+  },
+  attachmentChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.lightBg,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingVertical: 5,
+    paddingHorizontal: SPACING.sm,
+    marginBottom: 4,
+  },
+  attachmentChipText: {
+    fontSize: TYPOGRAPHY.xs,
+    color: COLORS.mainText,
+    flex: 1,
   },
 });

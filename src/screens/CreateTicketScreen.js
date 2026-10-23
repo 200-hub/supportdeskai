@@ -8,7 +8,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  SafeAreaView,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
@@ -21,6 +24,7 @@ export const CreateTicketScreen = ({
   user,
   onCreateTicket,
   onNavigateBack,
+  onViewTicket,
 }) => {
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
@@ -45,6 +49,50 @@ export const CreateTicketScreen = ({
     { key: 'urgent', label: 'Urgent', color: '#DC2626' },
   ];
 
+  const formatFileSize = (bytes) => {
+    if (!bytes || typeof bytes !== 'number') return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handlePickImage = async () => {
+    try {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert(
+            'Permission Denied',
+            'Permission to access your photos is required to attach images.'
+          );
+          return;
+        }
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: false,
+        quality: 0.8,
+        allowsMultipleSelection: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const newAttachments = result.assets.map((asset) => ({
+          id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          name: asset.fileName || asset.uri.split('/').pop() || 'photo.jpg',
+          size: asset.fileSize ? formatFileSize(asset.fileSize) : '',
+          uri: asset.uri,
+          mimeType: asset.mimeType || 'image/jpeg',
+          isImage: true,
+        }));
+        setAttachments((prev) => [...prev, ...newAttachments]);
+      }
+    } catch (err) {
+      console.warn('Image picker error:', err);
+      Alert.alert('Attachment Error', 'Could not open device media library.');
+    }
+  };
+
   const handleAddSampleAttachment = () => {
     const sampleFiles = [
       'console_error_log.txt (14 KB)',
@@ -59,8 +107,15 @@ export const CreateTicketScreen = ({
     }
   };
 
-  const handleRemoveAttachment = (fileToRemove) => {
-    setAttachments(attachments.filter((f) => f !== fileToRemove));
+  const handleRemoveAttachment = (attachmentToRemove) => {
+    setAttachments(
+      attachments.filter((item) => {
+        if (typeof item === 'object' && typeof attachmentToRemove === 'object') {
+          return item.id ? item.id !== attachmentToRemove.id : item.uri !== attachmentToRemove.uri;
+        }
+        return item !== attachmentToRemove;
+      })
+    );
   };
 
   const handleSubmit = () => {
@@ -112,6 +167,11 @@ export const CreateTicketScreen = ({
         slaStatus: priority === 'urgent' ? 'at-risk' : 'safe',
         updatedAt: 'Just now',
         tags: [category.toLowerCase().split(' ')[0], priority],
+        attachments: attachments.map((att) =>
+          typeof att === 'string'
+            ? att
+            : `${att.name}${att.size ? ` (${att.size})` : ''}`
+        ),
         messages: [
           {
             id: `msg-${Date.now()}`,
@@ -141,7 +201,13 @@ export const CreateTicketScreen = ({
         [
           {
             text: 'View Ticket',
-            onPress: () => onNavigateBack && onNavigateBack(),
+            onPress: () => {
+              if (onViewTicket) {
+                onViewTicket(newTicket);
+              } else if (onNavigateBack) {
+                onNavigateBack();
+              }
+            },
           },
         ]
       );
@@ -258,26 +324,60 @@ export const CreateTicketScreen = ({
 
             {/* Attachments Section */}
             <Text style={styles.fieldLabel}>Attachments</Text>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={handleAddSampleAttachment}
-              style={styles.attachmentButton}
-            >
-              <Ionicons name="cloud-upload-outline" size={18} color={COLORS.primaryNavy} style={{ marginRight: 6 }} />
-              <Text style={styles.attachmentBtnText}>Upload File / Log Dump</Text>
-            </TouchableOpacity>
+            <View style={styles.attachmentButtonsRow}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handlePickImage}
+                style={styles.attachmentButton}
+              >
+                <Ionicons name="image-outline" size={18} color={COLORS.primaryNavy} style={{ marginRight: 6 }} />
+                <Text style={styles.attachmentBtnText}>Choose from Photos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleAddSampleAttachment}
+                style={styles.sampleAttachmentBtn}
+              >
+                <Ionicons name="document-text-outline" size={15} color={COLORS.secondaryText} style={{ marginRight: 4 }} />
+                <Text style={styles.sampleAttachmentBtnText}>+ Sample Log</Text>
+              </TouchableOpacity>
+            </View>
 
             {attachments.length > 0 && (
               <View style={styles.attachmentsList}>
-                {attachments.map((file, i) => (
-                  <View key={i} style={styles.fileChip}>
-                    <Ionicons name="document-attach-outline" size={14} color={COLORS.primaryNavy} style={{ marginRight: 4 }} />
-                    <Text style={styles.fileName} numberOfLines={1}>{file}</Text>
-                    <TouchableOpacity onPress={() => handleRemoveAttachment(file)}>
-                      <Ionicons name="close-circle" size={16} color={COLORS.secondaryText} style={{ marginLeft: 6 }} />
-                    </TouchableOpacity>
-                  </View>
-                ))}
+                {attachments.map((att, i) => {
+                  const isObj = typeof att === 'object' && att !== null;
+                  const name = isObj ? att.name : att;
+                  const size = isObj ? att.size : '';
+                  const uri = isObj ? att.uri : null;
+
+                  return (
+                    <View key={isObj ? att.id || i : i} style={styles.attachmentCard}>
+                      {uri ? (
+                        <Image
+                          source={{ uri }}
+                          style={styles.attachmentThumb}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View style={styles.attachmentIconBox}>
+                          <Ionicons name="document-attach" size={20} color={COLORS.primaryNavy} />
+                        </View>
+                      )}
+                      <View style={styles.attachmentDetails}>
+                        <Text style={styles.fileName} numberOfLines={1}>{name}</Text>
+                        {size ? <Text style={styles.fileMeta}>{size}</Text> : null}
+                      </View>
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => handleRemoveAttachment(att)}
+                        style={styles.removeAttachmentBtn}
+                      >
+                        <Ionicons name="close-circle" size={18} color={COLORS.secondaryText} />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
               </View>
             )}
 
@@ -379,7 +479,13 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.xs + 1,
     fontWeight: TYPOGRAPHY.semiBold,
   },
+  attachmentButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
   attachmentButton: {
+    flex: 1,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderStyle: 'dashed',
@@ -389,24 +495,68 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     backgroundColor: COLORS.lightBg,
-    marginBottom: SPACING.sm,
+    marginRight: SPACING.xs + 2,
   },
   attachmentBtnText: {
     fontSize: TYPOGRAPHY.xs + 1,
     fontWeight: TYPOGRAPHY.semiBold,
     color: COLORS.primaryNavy,
   },
+  sampleAttachmentBtn: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.sm + 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    backgroundColor: COLORS.white,
+  },
+  sampleAttachmentBtnText: {
+    fontSize: TYPOGRAPHY.xs,
+    fontWeight: TYPOGRAPHY.medium,
+    color: COLORS.secondaryText,
+  },
   attachmentsList: {
     marginBottom: SPACING.md,
   },
-  fileChip: {
+  attachmentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EFF6FF',
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: SPACING.xs + 2,
+    marginBottom: SPACING.xs + 2,
+  },
+  attachmentThumb: {
+    width: 44,
+    height: 44,
     borderRadius: RADIUS.sm,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    marginBottom: 4,
+    backgroundColor: COLORS.lightBg,
+  },
+  attachmentIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.sm,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  attachmentDetails: {
+    flex: 1,
+    marginLeft: SPACING.sm,
+    justifyContent: 'center',
+  },
+  fileMeta: {
+    fontSize: TYPOGRAPHY.xs - 1,
+    color: COLORS.secondaryText,
+    marginTop: 2,
+  },
+  removeAttachmentBtn: {
+    padding: SPACING.xs,
   },
   fileName: {
     fontSize: TYPOGRAPHY.xs,

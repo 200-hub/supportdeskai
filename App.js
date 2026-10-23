@@ -107,6 +107,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    setCurrentUser(INITIAL_USER);
     setAuthScreen('welcome');
     setActiveOverlay(null);
     setCustomerTab('home');
@@ -223,6 +224,7 @@ export default function App() {
           user={currentUser}
           onCreateTicket={handleCreateTicket}
           onNavigateBack={() => setActiveOverlay(null)}
+          onViewTicket={(ticket) => handleOpenTicketDetails(ticket)}
         />
       );
     }

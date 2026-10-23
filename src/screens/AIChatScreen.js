@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
@@ -36,6 +37,31 @@ export const AIChatScreen = ({
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef();
+
+  useEffect(() => {
+    if (initialConversation?.messages) {
+      setMessages(initialConversation.messages);
+    } else {
+      setMessages([
+        {
+          id: 'msg-1',
+          senderType: 'assistant',
+          senderName: 'SupportDesk AI Bot',
+          time: 'Just now',
+          content: 'Hello! I am your SupportDesk AI assistant. Ask me anything about your orders, invoices, or technical integrations.',
+          isDemo: true,
+        },
+      ]);
+    }
+  }, [initialConversation]);
+
+  useEffect(() => {
+    const keyboardEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const sub = Keyboard.addListener(keyboardEvent, () => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    });
+    return () => sub.remove();
+  }, []);
 
   const suggestedQuestions = [
     'How do I re-verify webhooks?',
@@ -97,11 +123,12 @@ export const AIChatScreen = ({
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
     >
-      {/* Top Header */}
-      <View style={styles.chatHeader}>
+      <View style={styles.innerContainer}>
+        {/* Top Header */}
+        <View style={styles.chatHeader}>
         <View style={styles.headerLeft}>
           {onNavigateBack && (
             <TouchableOpacity
@@ -128,6 +155,18 @@ export const AIChatScreen = ({
         </View>
 
         <View style={styles.headerRight}>
+          {onEscalateToTicket && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={onEscalateToTicket}
+              style={styles.escalateBtn}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="ticket-outline" size={15} color={COLORS.white} style={{ marginRight: 4 }} />
+              <Text style={styles.escalateBtnText}>Create Ticket</Text>
+            </TouchableOpacity>
+          )}
+
           {onNavigateToHistory && (
             <TouchableOpacity
               activeOpacity={0.7}
@@ -154,6 +193,8 @@ export const AIChatScreen = ({
         ref={scrollViewRef}
         style={styles.messageScroll}
         contentContainerStyle={styles.messageContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
         {messages.map((item) => (
@@ -164,6 +205,7 @@ export const AIChatScreen = ({
             message={item.content}
             timestamp={item.time}
             isDemo={item.isDemo}
+            isOutgoing={item.senderType === 'customer'}
           />
         ))}
 
@@ -219,6 +261,7 @@ export const AIChatScreen = ({
           </TouchableOpacity>
         </View>
       </View>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -227,6 +270,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.lightBg,
+  },
+  innerContainer: {
+    flex: 1,
   },
   chatHeader: {
     backgroundColor: COLORS.primaryNavy,
@@ -285,6 +331,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  escalateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.accentTeal,
+    borderRadius: RADIUS.sm,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginRight: SPACING.xs + 2,
+  },
+  escalateBtnText: {
+    color: COLORS.white,
+    fontSize: TYPOGRAPHY.xs,
+    fontWeight: TYPOGRAPHY.bold,
+  },
   historyBtn: {
     width: 36,
     height: 36,
@@ -311,6 +371,7 @@ const styles = StyleSheet.create({
   messageContent: {
     padding: SPACING.lg,
     paddingBottom: SPACING.md,
+    flexGrow: 1,
   },
   typingContainer: {
     flexDirection: 'row',
