@@ -65,6 +65,31 @@ export const AIChatScreen = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (initialConversation?.messages) {
+      setMessages(initialConversation.messages);
+    } else {
+      setMessages([
+        {
+          id: 'msg-1',
+          senderType: 'assistant',
+          senderName: 'SupportDesk AI Bot',
+          time: 'Just now',
+          content: 'Hello! I am your SupportDesk AI assistant. Ask me anything about your orders, invoices, or technical integrations.',
+          isDemo: true,
+        },
+      ]);
+    }
+  }, [initialConversation]);
+
+  useEffect(() => {
+    const keyboardEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const sub = Keyboard.addListener(keyboardEvent, () => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    });
+    return () => sub.remove();
+  }, []);
+
   const suggestedQuestions = [
     'How do I re-verify webhooks?',
     'Download my monthly VAT invoice',
@@ -135,11 +160,17 @@ export const AIChatScreen = ({
   return (
     <KeyboardAvoidingView
       style={styles.container}
+<<<<<<< HEAD
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={0}
+=======
+      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+>>>>>>> 0b732f9ac4605d0f26e286a0f378ee378b0acd83
     >
-      {/* Top Header */}
-      <View style={styles.chatHeader}>
+      <View style={styles.innerContainer}>
+        {/* Top Header */}
+        <View style={styles.chatHeader}>
         <View style={styles.headerLeft}>
           {onNavigateBack && (
             <TouchableOpacity
@@ -173,10 +204,17 @@ export const AIChatScreen = ({
               activeOpacity={0.7}
               onPress={onEscalateToTicket}
               style={styles.escalateBtn}
+<<<<<<< HEAD
               hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
             >
               <Ionicons name="add" size={14} color={COLORS.white} style={{ marginRight: 2 }} />
               <Text style={styles.escalateBtnText}>Ticket</Text>
+=======
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="ticket-outline" size={15} color={COLORS.white} style={{ marginRight: 4 }} />
+              <Text style={styles.escalateBtnText}>Create Ticket</Text>
+>>>>>>> 0b732f9ac4605d0f26e286a0f378ee378b0acd83
             </TouchableOpacity>
           )}
 
@@ -207,10 +245,14 @@ export const AIChatScreen = ({
         style={styles.messageScroll}
         contentContainerStyle={styles.messageContent}
         keyboardShouldPersistTaps="handled"
+<<<<<<< HEAD
         keyboardDismissMode="on-drag"
         onLayout={() => {
           scrollViewRef.current?.scrollToEnd({ animated: false });
         }}
+=======
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+>>>>>>> 0b732f9ac4605d0f26e286a0f378ee378b0acd83
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
         {messages.map((item) => (
@@ -315,6 +357,7 @@ export const AIChatScreen = ({
           </TouchableOpacity>
         </View>
       </View>
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -325,6 +368,9 @@ const styles = StyleSheet.create({
     minHeight: 0,
     backgroundColor: COLORS.lightBg,
     overflow: 'hidden',
+  },
+  innerContainer: {
+    flex: 1,
   },
   chatHeader: {
     backgroundColor: COLORS.primaryNavy,
@@ -389,6 +435,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.accentTeal,
+<<<<<<< HEAD
     paddingVertical: 5,
     paddingHorizontal: 8,
     borderRadius: RADIUS.xs,
@@ -397,6 +444,16 @@ const styles = StyleSheet.create({
   escalateBtnText: {
     fontSize: 11,
     color: COLORS.white,
+=======
+    borderRadius: RADIUS.sm,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginRight: SPACING.xs + 2,
+  },
+  escalateBtnText: {
+    color: COLORS.white,
+    fontSize: TYPOGRAPHY.xs,
+>>>>>>> 0b732f9ac4605d0f26e286a0f378ee378b0acd83
     fontWeight: TYPOGRAPHY.bold,
   },
   historyBtn: {
@@ -427,8 +484,14 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   messageContent: {
+<<<<<<< HEAD
     padding: SPACING.md,
     paddingBottom: SPACING.sm,
+=======
+    padding: SPACING.lg,
+    paddingBottom: SPACING.md,
+    flexGrow: 1,
+>>>>>>> 0b732f9ac4605d0f26e286a0f378ee378b0acd83
   },
   typingContainer: {
     flexDirection: 'row',

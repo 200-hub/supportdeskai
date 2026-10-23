@@ -1,4 +1,5 @@
 import React from 'react';
+<<<<<<< HEAD
 import {
   View,
   Text,
@@ -6,6 +7,10 @@ import {
   ScrollView,
   StatusBar,
 } from 'react-native';
+=======
+import { View, Text, StyleSheet, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+>>>>>>> 0b732f9ac4605d0f26e286a0f378ee378b0acd83
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
