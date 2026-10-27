@@ -4,13 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
-import { Header } from '../components/common/Header';
+import { ScreenHeader } from '../components/common/ScreenHeader';
 import { ANALYTICS_METRICS } from '../data/mockData';
 
 export const AnalyticsScreen = () => {
   return (
     <View style={styles.container}>
-      <Header title="Performance & SLA" subtitle="Omnichannel Metrics Dashboard" />
+      <ScreenHeader title="Performance & SLA" subtitle="Omnichannel Metrics Dashboard" />
 
       <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
         {/* Top 2x2 Metric Grid */}

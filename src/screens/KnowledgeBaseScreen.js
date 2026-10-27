@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
-import { Header } from '../components/common/Header';
+import { ScreenHeader } from '../components/common/ScreenHeader';
 import { KNOWLEDGE_ARTICLES } from '../data/mockData';
 
 export const KnowledgeBaseScreen = () => {
@@ -32,7 +32,7 @@ export const KnowledgeBaseScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title="Knowledge Base" subtitle="Grounded Help Articles & Docs" />
+      <ScreenHeader title="Knowledge Base" subtitle="Grounded Help Articles & Docs" />
 
       {/* Search Input */}
       <View style={styles.searchSection}>

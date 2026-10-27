@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
-import { Header } from '../components/common/Header';
+import { ScreenHeader } from '../components/common/ScreenHeader';
 import { Avatar } from '../components/common/Avatar';
 
 export const SettingsScreen = () => {
@@ -23,7 +23,7 @@ export const SettingsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title="Agent Profile & Settings" subtitle="Preferences & Workspace Health" />
+      <ScreenHeader title="Agent Profile & Settings" subtitle="Preferences & Workspace Health" />
 
       <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
         {/* Profile Card */}

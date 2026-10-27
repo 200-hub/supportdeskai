@@ -12,7 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
-import { Header } from '../components/common/Header';
+import { ScreenHeader } from '../components/common/ScreenHeader';
+import { AppButton } from '../components/common/AppButton';
 import { TicketCard } from '../components/tickets/TicketCard';
 
 export const InboxScreen = ({ tickets, onSelectTicket, onNewTicket }) => {
@@ -61,7 +62,21 @@ export const InboxScreen = ({ tickets, onSelectTicket, onNewTicket }) => {
 
   return (
     <View style={styles.container}>
-      <Header title="SupportDesk AI" subtitle="Omnichannel Inbox" />
+      <ScreenHeader
+        title="SupportDesk AI"
+        subtitle="Omnichannel Inbox"
+        rightAction={
+          onNewTicket ? (
+            <AppButton
+              title="New Ticket"
+              size="sm"
+              variant="teal"
+              onPress={onNewTicket}
+              icon={<Ionicons name="add" size={16} color={COLORS.white} />}
+            />
+          ) : null
+        }
+      />
 
       {/* SLA & Quick Metrics Strip */}
       <View style={styles.metricsContainer}>

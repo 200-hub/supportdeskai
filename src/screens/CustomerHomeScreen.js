@@ -15,6 +15,7 @@ import { Avatar } from '../components/common/Avatar';
 import { SummaryCard } from '../components/common/SummaryCard';
 import { TicketCard } from '../components/tickets/TicketCard';
 import { AppButton } from '../components/common/AppButton';
+import { EmptyState } from '../components/common/EmptyState';
 
 export const CustomerHomeScreen = ({
   user,
@@ -98,7 +99,7 @@ export const CustomerHomeScreen = ({
         <View style={styles.primaryActionRow}>
           <AppButton
             title="Start a Conversation"
-            onPress={onNavigateToChat}
+            onPress={() => onNavigateToChat && onNavigateToChat()}
             variant="teal"
             size="md"
             icon={<Ionicons name="chatbubbles" size={17} color={COLORS.white} />}
@@ -107,7 +108,7 @@ export const CustomerHomeScreen = ({
 
           <AppButton
             title="Create Ticket"
-            onPress={onNavigateToCreateTicket}
+            onPress={() => onNavigateToCreateTicket && onNavigateToCreateTicket()}
             variant="primary"
             size="md"
             icon={<Ionicons name="add-circle-outline" size={17} color={COLORS.white} />}
@@ -215,27 +216,38 @@ export const CustomerHomeScreen = ({
           </TouchableOpacity>
         </View>
 
-        {recentConvs.map((conv) => (
-          <TouchableOpacity
-            key={conv.id}
-            activeOpacity={0.7}
-            onPress={() => onNavigateToChat(conv)}
-            style={styles.conversationCard}
-          >
-            <View style={styles.convIconBox}>
-              <Ionicons name="chatbubble-ellipses-outline" size={18} color={COLORS.accentTeal} />
-            </View>
-            <View style={styles.convTextGroup}>
-              <View style={styles.convTopRow}>
-                <Text style={styles.convTitle}>{conv.title}</Text>
-                <Text style={styles.convTime}>{conv.time}</Text>
+        {recentConvs.length > 0 ? (
+          recentConvs.map((conv) => (
+            <TouchableOpacity
+              key={conv.id}
+              activeOpacity={0.7}
+              onPress={() => onNavigateToChat(conv)}
+              style={styles.conversationCard}
+            >
+              <View style={styles.convIconBox}>
+                <Ionicons name="chatbubble-ellipses-outline" size={18} color={COLORS.accentTeal} />
               </View>
-              <Text style={styles.convLastMessage} numberOfLines={1}>
-                {conv.lastMessage}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+              <View style={styles.convTextGroup}>
+                <View style={styles.convTopRow}>
+                  <Text style={styles.convTitle}>{conv.title}</Text>
+                  <Text style={styles.convTime}>{conv.time}</Text>
+                </View>
+                <Text style={styles.convLastMessage} numberOfLines={1}>
+                  {conv.lastMessage}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <EmptyState
+            icon="chatbubbles-outline"
+            title="No recent conversations"
+            message="You don't have any recent conversations. Start chatting with our AI assistant anytime."
+            actionLabel="Start a Conversation"
+            onAction={() => onNavigateToChat && onNavigateToChat()}
+            style={styles.emptyStateCard}
+          />
+        )}
 
         {/* Recent Tickets Section */}
         <View style={styles.sectionHeader}>
@@ -245,13 +257,24 @@ export const CustomerHomeScreen = ({
           </TouchableOpacity>
         </View>
 
-        {recentTickets.map((ticket) => (
-          <TicketCard
-            key={ticket.id}
-            ticket={ticket}
-            onPress={onNavigateToTicketDetails}
+        {recentTickets.length > 0 ? (
+          recentTickets.map((ticket) => (
+            <TicketCard
+              key={ticket.id}
+              ticket={ticket}
+              onPress={onNavigateToTicketDetails}
+            />
+          ))
+        ) : (
+          <EmptyState
+            icon="ticket-outline"
+            title="No recent tickets"
+            message="You haven't submitted any support tickets yet. Need help with an issue or request?"
+            actionLabel="Create Ticket"
+            onAction={() => onNavigateToCreateTicket && onNavigateToCreateTicket()}
+            style={styles.emptyStateCard}
           />
-        ))}
+        )}
       </ScrollView>
     </View>
   );
@@ -463,5 +486,14 @@ const styles = StyleSheet.create({
   convLastMessage: {
     fontSize: TYPOGRAPHY.xs,
     color: COLORS.secondaryText,
+  },
+  emptyStateCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingVertical: SPACING.xl,
+    paddingHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
   },
 });

@@ -15,22 +15,28 @@ import {
 } from './src/data/mockData';
 
 import { BottomNavigation } from './src/components/common/BottomNavigation';
+import { TabBar } from './src/components/common/TabBar';
 
-// All 14 Screens
-import { WelcomeScreen } from './src/screens/WelcomeScreen';
-import { LoginScreen } from './src/screens/LoginScreen';
-import { RegistrationScreen } from './src/screens/RegistrationScreen';
-import { CustomerHomeScreen } from './src/screens/CustomerHomeScreen';
-import { AIChatScreen } from './src/screens/AIChatScreen';
-import { ConversationHistoryScreen } from './src/screens/ConversationHistoryScreen';
-import { MyTicketsScreen } from './src/screens/MyTicketsScreen';
-import { CreateTicketScreen } from './src/screens/CreateTicketScreen';
-import { TicketDetailsScreen } from './src/screens/TicketDetailsScreen';
-import { HelpCenterScreen } from './src/screens/HelpCenterScreen';
-import { AgentDashboardScreen } from './src/screens/AgentDashboardScreen';
-import { NotificationsScreen } from './src/screens/NotificationsScreen';
-import { ProfileScreen } from './src/screens/ProfileScreen';
-import { AdminSettingsScreen } from './src/screens/AdminSettingsScreen';
+// All Screens
+import { WelcomeScreen } from './src/screens/WelcomeScreen'; // Screen 1
+import { LoginScreen } from './src/screens/LoginScreen'; // Screen 2
+import { RegistrationScreen } from './src/screens/RegistrationScreen'; // Screen 3
+import { CustomerHomeScreen } from './src/screens/CustomerHomeScreen'; // Screen 4
+import { AIChatScreen } from './src/screens/AIChatScreen'; // Screen 5
+import { ConversationHistoryScreen } from './src/screens/ConversationHistoryScreen'; // Screen 6
+import { MyTicketsScreen } from './src/screens/MyTicketsScreen'; // Screen 7
+import { CreateTicketScreen } from './src/screens/CreateTicketScreen'; // Screen 8
+import { TicketDetailsScreen } from './src/screens/TicketDetailsScreen'; // Screen 9
+import { HelpCenterScreen } from './src/screens/HelpCenterScreen'; // Screen 10
+import { AgentDashboardScreen } from './src/screens/AgentDashboardScreen'; // Screen 11
+import { NotificationsScreen } from './src/screens/NotificationsScreen'; // Screen 12
+import { ProfileScreen } from './src/screens/ProfileScreen'; // Screen 13
+import { AdminSettingsScreen } from './src/screens/AdminSettingsScreen'; // Screen 14
+import { InboxScreen } from './src/screens/InboxScreen';
+import { AICopilotScreen } from './src/screens/AICopilotScreen';
+import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
+import { KnowledgeBaseScreen } from './src/screens/KnowledgeBaseScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 
 export default function App() {
   // Authentication state
@@ -42,7 +48,11 @@ export default function App() {
   // Customer navigation tab
   const [customerTab, setCustomerTab] = useState('home');
 
-  // Active overlay
+  // Agent navigation tab: 'dashboard' | 'inbox' | 'copilot' | 'analytics' | 'knowledge' | 'settings'
+  const [agentTab, setAgentTab] = useState('dashboard');
+
+  // Modal / Detailed Screen overlay:
+  // null | 'create_ticket' | 'ticket_details' | 'conversation_history' | 'notifications' | 'agent_dashboard' | 'admin_settings'
   const [activeOverlay, setActiveOverlay] = useState(null);
 
   // Application data
@@ -79,7 +89,8 @@ export default function App() {
     setAuthScreen(null);
 
     if (role === 'agent') {
-      setActiveOverlay('agent_dashboard');
+      setActiveOverlay(null);
+      setAgentTab('dashboard');
     } else if (role === 'admin') {
       setActiveOverlay('admin_settings');
     } else {
@@ -89,11 +100,12 @@ export default function App() {
   };
 
   const handleRegisterSuccess = ({ name, email, role }) => {
+    const userRole = role || 'customer';
     setCurrentUser({
       ...currentUser,
       name,
       email,
-      role: role || 'customer',
+      role: userRole,
       avatarInitials: name
         .split(' ')
         .map((part) => part[0])
@@ -103,8 +115,15 @@ export default function App() {
     });
 
     setAuthScreen(null);
-    setActiveOverlay(null);
-    setCustomerTab('home');
+    if (userRole === 'agent') {
+      setActiveOverlay(null);
+      setAgentTab('dashboard');
+    } else if (userRole === 'admin') {
+      setActiveOverlay('admin_settings');
+    } else {
+      setActiveOverlay(null);
+      setCustomerTab('home');
+    }
   };
 
   const handleLogout = () => {
@@ -112,6 +131,7 @@ export default function App() {
     setAuthScreen('welcome');
     setActiveOverlay(null);
     setCustomerTab('home');
+    setAgentTab('dashboard');
   };
 
   // Ticket handlers
@@ -151,8 +171,19 @@ export default function App() {
     }
   };
 
-  const handleOpenChatWithConv = (conversation) => {
-    setSelectedConversation(conversation);
+  const handleUpdateConversation = (updatedConv) => {
+    setSelectedConversation(updatedConv);
+    setConversations((prev) => {
+      const exists = prev.some((c) => c.id === updatedConv.id);
+      if (exists) {
+        return prev.map((c) => (c.id === updatedConv.id ? updatedConv : c));
+      }
+      return [updatedConv, ...prev];
+    });
+  };
+
+  const handleOpenChatWithConv = (conv) => {
+    setSelectedConversation(conv);
     setActiveOverlay(null);
     setCustomerTab('chat');
   };
@@ -182,7 +213,8 @@ export default function App() {
     });
 
     if (nextRole === 'agent') {
-      setActiveOverlay('agent_dashboard');
+      setActiveOverlay(null);
+      setAgentTab('dashboard');
     } else if (nextRole === 'admin') {
       setActiveOverlay('admin_settings');
     } else {
@@ -288,23 +320,40 @@ export default function App() {
       );
     }
 
-    // Agent dashboard
-    if (
-      activeOverlay === 'agent_dashboard' ||
-      currentUser.role === 'agent'
-    ) {
-      return (
-        <AgentDashboardScreen
-          user={currentUser}
-          tickets={tickets}
-          onSelectTicket={handleOpenTicketDetails}
-          onSwitchRole={() => handleCycleRole()}
-          onNavigateToNotifications={() =>
-            setActiveOverlay('notifications')
-          }
-          onNavigateBack={() => handleCycleRole('customer')}
-        />
-      );
+    if (activeOverlay === 'agent_dashboard' || currentUser.role === 'agent') {
+      switch (agentTab) {
+        case 'inbox':
+          return (
+            <InboxScreen
+              tickets={tickets}
+              onSelectTicket={handleOpenTicketDetails}
+              onNewTicket={() => setActiveOverlay('create_ticket')}
+            />
+          );
+        case 'copilot':
+          return <AICopilotScreen />;
+        case 'analytics':
+          return <AnalyticsScreen />;
+        case 'knowledge':
+          return <KnowledgeBaseScreen />;
+        case 'settings':
+          return <SettingsScreen />;
+        case 'dashboard':
+        default:
+          return (
+            <AgentDashboardScreen
+              user={currentUser}
+              tickets={tickets}
+              onSelectTicket={handleOpenTicketDetails}
+              onUpdateTicket={handleUpdateTicket}
+              onSwitchRole={() => handleCycleRole()}
+              onNavigateToNotifications={() => setActiveOverlay('notifications')}
+              onNavigateBack={() => {
+                handleCycleRole('customer');
+              }}
+            />
+          );
+      }
     }
 
     // Admin settings
@@ -372,6 +421,7 @@ export default function App() {
         return (
           <AIChatScreen
             initialConversation={selectedConversation}
+            onUpdateConversation={handleUpdateConversation}
             onNavigateBack={() => setCustomerTab('home')}
             onNavigateToHistory={() =>
               setActiveOverlay('conversation_history')
@@ -438,13 +488,13 @@ export default function App() {
     currentUser.role === 'customer' &&
     customerTab !== 'chat'; // Hide bottom nav on chat tab so AIChatScreen fills the full screen
 
-  const unreadTicketsCount = tickets.filter(
-    (ticket) => ticket.status === 'open'
-  ).length;
+  const showAgentTabBar =
+    authScreen === null &&
+    activeOverlay === null &&
+    currentUser.role === 'agent';
 
-  const unreadNotifsCount = notifications.filter(
-    (notification) => !notification.isRead
-  ).length;
+  const unreadTicketsCount = tickets.filter((t) => t.status === 'open').length;
+  const unreadNotifsCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <SafeAreaProvider>
@@ -463,6 +513,15 @@ export default function App() {
               onSelectTab={(tab) => setCustomerTab(tab)}
               ticketBadge={unreadTicketsCount}
               chatBadge={1}
+            />
+          )}
+
+          {/* Agent Bottom TabBar */}
+          {showAgentTabBar && (
+            <TabBar
+              currentTab={agentTab}
+              onSelectTab={(tab) => setAgentTab(tab)}
+              unreadCount={unreadTicketsCount}
             />
           )}
         </View>

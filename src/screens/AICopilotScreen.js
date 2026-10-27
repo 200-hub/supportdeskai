@@ -11,8 +11,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
-import { Header } from '../components/common/Header';
-import { SolidButton } from '../components/common/SolidButton';
+import { ScreenHeader } from '../components/common/ScreenHeader';
+import { AppButton } from '../components/common/AppButton';
 
 export const AICopilotScreen = () => {
   const [prompt, setPrompt] = useState('');
@@ -43,7 +43,7 @@ export const AICopilotScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title="AI Copilot Studio" subtitle="Grounded RAG Assistant & Deflection" />
+      <ScreenHeader title="AI Copilot Studio" subtitle="Grounded RAG Assistant & Deflection" />
 
       <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
         {/* Metric Cards Row */}
@@ -111,9 +111,10 @@ export const AICopilotScreen = () => {
             ))}
           </View>
 
-          <SolidButton
+          <AppButton
             title={analyzing ? 'Synthesizing Knowledge...' : 'Run Copilot Analysis'}
             onPress={handleTestInference}
+            loading={analyzing}
             disabled={analyzing || !prompt.trim()}
             variant="primary"
             style={{ marginTop: SPACING.md }}

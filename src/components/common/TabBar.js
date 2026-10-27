@@ -7,8 +7,9 @@ import { SPACING } from '../../theme/spacing';
 
 export const TabBar = ({ currentTab, onSelectTab, unreadCount = 3 }) => {
   const tabs = [
+    { key: 'dashboard', label: 'Dashboard', icon: 'grid' },
     { key: 'inbox', label: 'Inbox', icon: 'chatbubbles', badge: unreadCount },
-    { key: 'copilot', label: 'AI Copilot', icon: 'sparkles' },
+    { key: 'copilot', label: 'Copilot', icon: 'sparkles' },
     { key: 'analytics', label: 'Analytics', icon: 'stats-chart' },
     { key: 'knowledge', label: 'Knowledge', icon: 'book' },
     { key: 'settings', label: 'Settings', icon: 'person' },
@@ -31,7 +32,7 @@ export const TabBar = ({ currentTab, onSelectTab, unreadCount = 3 }) => {
                 size={21}
                 color={isActive ? COLORS.accentTeal : COLORS.secondaryText}
               />
-              {tab.badge ? (
+              {tab.badge > 0 ? (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{tab.badge}</Text>
                 </View>

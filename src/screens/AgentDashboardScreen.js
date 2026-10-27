@@ -62,6 +62,15 @@ export const AgentDashboardScreen = ({
   const assignedToMeCount = tickets.filter(isAssignedToUser).length;
   const unassignedCount = tickets.filter(isTicketUnassigned).length;
 
+  const atRiskTickets = useMemo(() => {
+    return tickets.filter((t) => {
+      if (t.status === 'resolved' || t.status === 'closed') return false;
+      return t.slaStatus === 'at-risk';
+    });
+  }, [tickets]);
+
+  const atRiskCount = atRiskTickets.length;
+
   const currentAgentName = user?.name ? `${user.name} (You)` : 'You (Current Agent)';
   const availableAgents = [
     currentAgentName,
@@ -276,25 +285,31 @@ export const AgentDashboardScreen = ({
         </View>
 
         {/* SLA Escalation Bar */}
-        <View style={styles.slaBanner}>
-          <View style={styles.slaLeft}>
-            <Ionicons name="warning" size={18} color="#DC2626" style={{ marginRight: SPACING.sm }} />
-            <View>
-              <Text style={styles.slaTitle}>2 Tickets Near SLA Breach (&lt; 20m)</Text>
-              <Text style={styles.slaDesc}>First response target must be delivered immediately.</Text>
+        {atRiskCount > 0 && (
+          <View style={styles.slaBanner}>
+            <View style={styles.slaLeft}>
+              <Ionicons name="warning" size={18} color="#DC2626" style={{ marginRight: SPACING.sm }} />
+              <View>
+                <Text style={styles.slaTitle}>
+                  {`${atRiskCount} ${atRiskCount === 1 ? 'Ticket' : 'Tickets'} Near SLA Breach`}
+                </Text>
+                <Text style={styles.slaDesc}>
+                  First response target must be delivered immediately.
+                </Text>
+              </View>
             </View>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                setSelectedFilter('urgent');
+                setCurrentPage(1);
+              }}
+              style={styles.slaActionBtn}
+            >
+              <Text style={styles.slaActionText}>Filter P1</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => {
-              setSelectedFilter('urgent');
-              setCurrentPage(1);
-            }}
-            style={styles.slaActionBtn}
-          >
-            <Text style={styles.slaActionText}>Filter P1</Text>
-          </TouchableOpacity>
-        </View>
+        )}
 
         {/* Search & Queue Segment Tabs */}
         <View style={styles.searchBox}>

@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
@@ -29,6 +30,7 @@ export const TicketDetailsScreen = ({
   const [isNoteMode, setIsNoteMode] = useState(false);
   const [ticketStatus, setTicketStatus] = useState(ticket?.status || 'open');
   const scrollViewRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (ticket) {
@@ -90,6 +92,7 @@ export const TicketDetailsScreen = ({
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
     >
       <ScreenHeader
         title={`#${ticket.id}`}
@@ -223,7 +226,7 @@ export const TicketDetailsScreen = ({
       </ScrollView>
 
       {/* Reply Composer Bar */}
-      <View style={styles.composerContainer}>
+      <View style={[styles.composerContainer, { paddingBottom: insets.bottom > 0 ? insets.bottom : SPACING.md }]}>
         {/* AI Smart Draft Action */}
         {ticket?.aiSmartDraft ? (
           <View style={styles.aiDraftRow}>
