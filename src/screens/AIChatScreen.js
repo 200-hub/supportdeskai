@@ -125,8 +125,10 @@ export const AIChatScreen = ({
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      behavior="padding"
+      // KAV measures itself relative to its parent, not the screen; the root
+      // SafeAreaView pushes it down by insets.top, which varies per device.
+      keyboardVerticalOffset={insets.top}
     >
       <View style={styles.innerContainer}>
         {/* Top Header */}
