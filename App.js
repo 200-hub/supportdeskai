@@ -6,6 +6,7 @@ import {
 } from 'react-native-safe-area-context';
 
 import { COLORS } from './src/theme/colors';
+import { useTopInset } from './src/hooks/useTopInset';
 
 import {
   INITIAL_USER,
@@ -453,7 +454,8 @@ export default function App() {
         backgroundColor={COLORS.primaryNavy}
       />
 
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+        <StatusBarSpacer />
         <View style={styles.container}>
           {renderScreen()}
 
@@ -470,6 +472,8 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+const StatusBarSpacer = () => <View style={{ height: useTopInset() }} />;
 
 const styles = StyleSheet.create({
   safeArea: {

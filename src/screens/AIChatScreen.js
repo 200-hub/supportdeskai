@@ -16,6 +16,7 @@ import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
 import { ChatBubble } from '../components/common/ChatBubble';
+import { useTopInset } from '../hooks/useTopInset';
 
 export const AIChatScreen = ({
   initialConversation,
@@ -39,6 +40,7 @@ export const AIChatScreen = ({
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef();
   const insets = useSafeAreaInsets();
+  const topInset = useTopInset();
 
   useEffect(() => {
     if (initialConversation?.messages) {
@@ -126,9 +128,9 @@ export const AIChatScreen = ({
     <KeyboardAvoidingView
       style={styles.container}
       behavior="padding"
-      // KAV measures itself relative to its parent, not the screen; the root
-      // SafeAreaView pushes it down by insets.top, which varies per device.
-      keyboardVerticalOffset={insets.top}
+      // KAV measures itself relative to its parent, not the screen; App's
+      // StatusBarSpacer pushes it down by the top inset, which varies per device.
+      keyboardVerticalOffset={topInset}
     >
       <View style={styles.innerContainer}>
         {/* Top Header */}
