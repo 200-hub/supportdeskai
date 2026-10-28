@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
@@ -30,7 +29,6 @@ export const CustomerHomeScreen = ({
   onNavigateToNotifications,
   onSwitchRole,
 }) => {
-  const [search, setSearch] = useState('');
 
   const openCount = tickets.filter((t) => t.status === 'open').length;
   const pendingCount = tickets.filter((t) => t.status === 'pending').length;

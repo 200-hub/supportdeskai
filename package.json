@@ -10,7 +10,11 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
+<<<<<<< HEAD
     "expo": "~58.0.19",
+=======
+    "expo": "~58.0.20",
+>>>>>>> origin/Nilambar
     "expo-font": "~58.0.10",
     "expo-image-picker": "~58.0.10",
     "expo-splash-screen": "~58.0.11",

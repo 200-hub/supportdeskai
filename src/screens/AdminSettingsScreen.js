@@ -18,7 +18,6 @@ import { Avatar } from '../components/common/Avatar';
 import { AGENT_TEAM, ADMIN_SETTINGS_DATA } from '../data/mockData';
 
 export const AdminSettingsScreen = ({
-  user,
   onNavigateBack,
   onSwitchRole,
   onLogout,
