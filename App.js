@@ -7,7 +7,6 @@ import {
 
 import { COLORS } from './src/theme/colors';
 import { useTopInset } from './src/hooks/useTopInset';
-
 import {
   INITIAL_USER,
   INITIAL_TICKETS,
@@ -494,8 +493,6 @@ export default function App() {
     activeOverlay === null &&
     currentUser.role === 'agent';
 
-  const topInset = useTopInset();
-
   const unreadTicketsCount = tickets.filter((t) => t.status === 'open').length;
   const unreadNotifsCount = notifications.filter((n) => !n.isRead).length;
 
@@ -507,7 +504,7 @@ export default function App() {
       />
 
       <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
-        <StatusBarSpacer height={topInset} />
+        <StatusBarSpacer />
         <View style={styles.container}>
           {renderScreen()}
 
@@ -534,7 +531,7 @@ export default function App() {
   );
 }
 
-const StatusBarSpacer = ({ height }) => <View style={{ height }} />;
+const StatusBarSpacer = () => { const topInset = useTopInset(); return <View style={{ height: topInset }} />; }
 
 const styles = StyleSheet.create({
   safeArea: {
