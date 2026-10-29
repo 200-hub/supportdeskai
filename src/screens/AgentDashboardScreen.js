@@ -293,7 +293,7 @@ export const AgentDashboardScreen = ({
                   {`${atRiskCount} ${atRiskCount === 1 ? 'Ticket' : 'Tickets'} Near SLA Breach`}
                 </Text>
                 <Text style={styles.slaDesc}>
-                  First response target must be delivered immediately.
+                  First response target must be delivered.
                 </Text>
               </View>
             </View>
