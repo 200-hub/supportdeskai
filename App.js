@@ -58,7 +58,7 @@ export default function App() {
 
   // Application data
   const [tickets, setTickets] = useState(INITIAL_TICKETS);
-  const [conversations] = useState(INITIAL_CONVERSATIONS);
+  const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
 
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -494,12 +494,11 @@ export default function App() {
     activeOverlay === null &&
     currentUser.role === 'agent';
 
-<<<<<<< HEAD
-=======
+  const topInset = useTopInset();
+
   const unreadTicketsCount = tickets.filter((t) => t.status === 'open').length;
   const unreadNotifsCount = notifications.filter((n) => !n.isRead).length;
 
->>>>>>> origin/Mallika
   return (
     <SafeAreaProvider>
       <StatusBar
@@ -508,7 +507,7 @@ export default function App() {
       />
 
       <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
-        <StatusBarSpacer />
+        <StatusBarSpacer height={topInset} />
         <View style={styles.container}>
           {renderScreen()}
 
@@ -535,7 +534,7 @@ export default function App() {
   );
 }
 
-const StatusBarSpacer = () => <View style={{ height: useTopInset() }} />;
+const StatusBarSpacer = ({ height }) => <View style={{ height }} />;
 
 const styles = StyleSheet.create({
   safeArea: {

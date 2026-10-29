@@ -41,11 +41,8 @@ export const AIChatScreen = ({
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef();
   const insets = useSafeAreaInsets();
-<<<<<<< HEAD
   const topInset = useTopInset();
-=======
-  const currentConvIdRef = useRef(initialConversation?.id || `conv-${Date.now()}`);
->>>>>>> origin/Mallika
+  const currentConvIdRef = useRef(initialConversation?.id || `conv-${Date.now()}`)
 
   useEffect(() => {
     if (initialConversation?.messages) {
@@ -165,15 +162,10 @@ export const AIChatScreen = ({
   return (
     <KeyboardAvoidingView
       style={styles.container}
-<<<<<<< HEAD
       behavior="padding"
       // KAV measures itself relative to its parent, not the screen; App's
       // StatusBarSpacer pushes it down by the top inset, which varies per device.
       keyboardVerticalOffset={topInset}
-=======
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
->>>>>>> origin/Mallika
     >
       <View style={styles.innerContainer}>
         {/* Top Header */}
