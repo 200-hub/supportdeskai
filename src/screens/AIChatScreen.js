@@ -23,6 +23,7 @@ export const AIChatScreen = ({
   onNavigateBack,
   onNavigateToHistory,
   onEscalateToTicket,
+  onUpdateConversation,
 }) => {
   const [messages, setMessages] = useState(
     initialConversation?.messages || [
@@ -40,12 +41,18 @@ export const AIChatScreen = ({
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef();
   const insets = useSafeAreaInsets();
+<<<<<<< HEAD
   const topInset = useTopInset();
+=======
+  const currentConvIdRef = useRef(initialConversation?.id || `conv-${Date.now()}`);
+>>>>>>> origin/Mallika
 
   useEffect(() => {
     if (initialConversation?.messages) {
       setMessages(initialConversation.messages);
+      currentConvIdRef.current = initialConversation.id || currentConvIdRef.current;
     } else {
+      currentConvIdRef.current = `conv-${Date.now()}`;
       setMessages([
         {
           id: 'msg-1',
@@ -57,7 +64,7 @@ export const AIChatScreen = ({
         },
       ]);
     }
-  }, [initialConversation]);
+  }, [initialConversation?.id]);
 
   useEffect(() => {
     const keyboardEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -86,9 +93,30 @@ export const AIChatScreen = ({
       content: text.trim(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInputText('');
     setIsTyping(true);
+
+    const activeConvId = initialConversation?.id || currentConvIdRef.current;
+    const conversationTitle =
+      initialConversation?.title ||
+      (text.trim().length > 32 ? `${text.trim().slice(0, 32)}...` : text.trim()) ||
+      'SupportDesk AI Live Assistant';
+
+    const userUpdatedConv = {
+      id: activeConvId,
+      title: conversationTitle,
+      lastMessage: text.trim(),
+      time: 'Just now',
+      status: 'active',
+      unreadCount: 0,
+      messages: updatedMessages,
+    };
+
+    if (onUpdateConversation) {
+      onUpdateConversation(userUpdatedConv);
+    }
 
     // Simulated local demo response with grounded knowledge context
     setTimeout(() => {
@@ -120,17 +148,32 @@ export const AIChatScreen = ({
       };
 
       setIsTyping(false);
-      setMessages((prev) => [...prev, aiReply]);
+      const finalMessages = [...updatedMessages, aiReply];
+      setMessages(finalMessages);
+
+      if (onUpdateConversation) {
+        onUpdateConversation({
+          ...userUpdatedConv,
+          lastMessage: replyContent,
+          time: 'Just now',
+          messages: finalMessages,
+        });
+      }
     }, 900);
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
+<<<<<<< HEAD
       behavior="padding"
       // KAV measures itself relative to its parent, not the screen; App's
       // StatusBarSpacer pushes it down by the top inset, which varies per device.
       keyboardVerticalOffset={topInset}
+=======
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+>>>>>>> origin/Mallika
     >
       <View style={styles.innerContainer}>
         {/* Top Header */}
@@ -244,7 +287,7 @@ export const AIChatScreen = ({
       </View>
 
       {/* Message Composer */}
-      <View style={[styles.composerBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 8 }]}>
+      <View style={[styles.composerBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : SPACING.sm }]}>
         <View style={styles.inputWrapper}>
           <TextInput
             placeholder="Type your question or request..."

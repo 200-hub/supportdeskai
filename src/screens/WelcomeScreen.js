@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
@@ -11,7 +11,12 @@ export const WelcomeScreen = ({ onGetStarted, onLogin }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryNavy} />
-      <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Top Brand Area */}
         <View style={styles.brandSection}>
           <View style={styles.logoBadge}>
@@ -80,7 +85,7 @@ export const WelcomeScreen = ({ onGetStarted, onLogin }) => {
           />
           <Text style={styles.versionNote}>SupportDesk AI for Android • v1.0.0</Text>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -89,6 +94,13 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.primaryNavy,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    backgroundColor: COLORS.primaryNavy,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.lg,
+    justifyContent: 'space-between',
   },
   container: {
     flex: 1,
