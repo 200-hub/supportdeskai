@@ -1,14 +1,28 @@
 import React from 'react';
+<<<<<<< HEAD
 import { View, Text, StyleSheet, StatusBar, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+=======
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  StatusBar,
+} from 'react-native';
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
 import { AppButton } from '../components/common/AppButton';
 
 export const WelcomeScreen = ({ onGetStarted, onLogin }) => {
+  const insets = useSafeAreaInsets();
+
   return (
+<<<<<<< HEAD
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primaryNavy} />
       <ScrollView
@@ -18,12 +32,31 @@ export const WelcomeScreen = ({ onGetStarted, onLogin }) => {
         keyboardShouldPersistTaps="handled"
       >
         {/* Top Brand Area */}
+=======
+    <View style={styles.screenWrapper}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.lightBg} translucent={false} />
+
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={[
+          styles.container,
+          {
+            paddingTop: SPACING.md,
+            paddingBottom: Math.max(insets.bottom, 18),
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        {/* Top Brand Section */}
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
         <View style={styles.brandSection}>
           <View style={styles.logoBadge}>
-            <Ionicons name="shield-checkmark" size={38} color={COLORS.accentTeal} />
+            <Ionicons name="shield-checkmark" size={34} color={COLORS.accentTeal} />
           </View>
           <Text style={styles.appName}>SupportDesk AI</Text>
           <View style={styles.taglineChip}>
+            <Ionicons name="sparkles" size={12} color="#0F766E" style={{ marginRight: 5 }} />
             <Text style={styles.tagline}>Smart Support. Simple Solutions.</Text>
           </View>
           <Text style={styles.introduction}>
@@ -31,35 +64,41 @@ export const WelcomeScreen = ({ onGetStarted, onLogin }) => {
           </Text>
         </View>
 
-        {/* Feature Highlights (Solid cards) */}
+        {/* Feature Highlights */}
         <View style={styles.featuresSection}>
           <View style={styles.featureItem}>
             <View style={styles.featureIconBox}>
-              <Ionicons name="flash-outline" size={18} color={COLORS.accentTeal} />
+              <Ionicons name="flash-outline" size={19} color={COLORS.accentTeal} />
             </View>
             <View style={styles.featureTextGroup}>
               <Text style={styles.featureTitle}>Instant Grounded Answers</Text>
-              <Text style={styles.featureDesc}>Deflect routine questions with verified AI knowledge citations.</Text>
+              <Text style={styles.featureDesc}>
+                Deflect routine questions with verified AI knowledge citations.
+              </Text>
             </View>
           </View>
 
           <View style={styles.featureItem}>
             <View style={styles.featureIconBox}>
-              <Ionicons name="chatbubbles-outline" size={18} color={COLORS.accentTeal} />
+              <Ionicons name="chatbubbles-outline" size={19} color={COLORS.accentTeal} />
             </View>
             <View style={styles.featureTextGroup}>
               <Text style={styles.featureTitle}>Omnichannel Sync</Text>
-              <Text style={styles.featureDesc}>Seamlessly track inquiries across Email, WhatsApp, and Chat.</Text>
+              <Text style={styles.featureDesc}>
+                Seamlessly track inquiries across Email, WhatsApp, and Live Chat.
+              </Text>
             </View>
           </View>
 
           <View style={styles.featureItem}>
             <View style={styles.featureIconBox}>
-              <Ionicons name="time-outline" size={18} color={COLORS.accentTeal} />
+              <Ionicons name="time-outline" size={19} color={COLORS.accentTeal} />
             </View>
             <View style={styles.featureTextGroup}>
               <Text style={styles.featureTitle}>Guaranteed SLA Resolution</Text>
-              <Text style={styles.featureDesc}>Live tracking with at-risk response notifications.</Text>
+              <Text style={styles.featureDesc}>
+                Live tracking with at-risk response countdown alerts.
+              </Text>
             </View>
           </View>
         </View>
@@ -75,25 +114,33 @@ export const WelcomeScreen = ({ onGetStarted, onLogin }) => {
             iconPosition="right"
             style={styles.primaryBtn}
           />
+
           <AppButton
             title="Sign In to Existing Account"
             onPress={onLogin}
-            variant="outline"
+            variant="navy"
             size="lg"
             style={styles.secondaryBtn}
-            textStyle={{ color: COLORS.primaryNavy }}
           />
-          <Text style={styles.versionNote}>SupportDesk AI for Android • v1.0.0</Text>
+
+          <Text style={styles.versionNote}>SupportDesk AI for Mobile • v1.0.0</Text>
         </View>
       </ScrollView>
+<<<<<<< HEAD
     </SafeAreaView>
+=======
+    </View>
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  screenWrapper: {
     flex: 1,
-    backgroundColor: COLORS.primaryNavy,
+    backgroundColor: COLORS.lightBg,
+  },
+  scrollArea: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -103,71 +150,85 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   container: {
-    flex: 1,
-    backgroundColor: COLORS.primaryNavy,
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.lg,
+    flexGrow: 1,
+    paddingHorizontal: SPACING.lg,
     justifyContent: 'space-between',
+    backgroundColor: COLORS.lightBg,
   },
   brandSection: {
     alignItems: 'center',
-    paddingTop: SPACING.xl,
+    paddingTop: SPACING.xs,
   },
   logoBadge: {
-    width: 72,
-    height: 72,
+    width: 64,
+    height: 64,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.secondaryNavy,
+    backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: '#2A3F6D',
+    borderColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   appName: {
-    fontSize: TYPOGRAPHY.xxl + 2,
+    fontSize: TYPOGRAPHY.xl + 2,
     fontWeight: TYPOGRAPHY.bold,
-    color: COLORS.white,
-    letterSpacing: 0.5,
+    color: COLORS.primaryNavy,
+    letterSpacing: 0.3,
   },
   taglineChip: {
-    backgroundColor: COLORS.secondaryNavy,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDFA',
     borderRadius: RADIUS.full,
     paddingHorizontal: SPACING.md,
     paddingVertical: 4,
-    marginTop: SPACING.xs + 2,
-    marginBottom: SPACING.md,
+    marginTop: 6,
+    marginBottom: SPACING.sm,
+    borderWidth: 1,
+    borderColor: '#99F6E4',
   },
   tagline: {
-    fontSize: TYPOGRAPHY.xs + 1,
-    color: COLORS.accentTeal,
-    fontWeight: TYPOGRAPHY.semiBold,
+    fontSize: TYPOGRAPHY.xs,
+    color: '#0F766E',
+    fontWeight: TYPOGRAPHY.bold,
   },
   introduction: {
-    fontSize: TYPOGRAPHY.sm,
-    color: '#94A3B8',
+    fontSize: TYPOGRAPHY.xs + 1,
+    color: COLORS.secondaryText,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 19,
     maxWidth: 320,
+    paddingHorizontal: SPACING.xs,
   },
   featuresSection: {
-    marginVertical: SPACING.lg,
+    marginVertical: SPACING.md,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.secondaryNavy,
+    backgroundColor: COLORS.white,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#2A3F6D',
+    borderColor: COLORS.border,
     padding: SPACING.md,
-    marginBottom: SPACING.sm + 2,
+    marginBottom: SPACING.sm,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
   featureIconBox: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.primaryNavy,
+    backgroundColor: '#F0FDFA',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.md,
@@ -178,28 +239,27 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: TYPOGRAPHY.sm,
     fontWeight: TYPOGRAPHY.bold,
-    color: COLORS.white,
+    color: COLORS.primaryNavy,
+    marginBottom: 2,
   },
   featureDesc: {
     fontSize: TYPOGRAPHY.xs,
-    color: '#94A3B8',
-    marginTop: 2,
+    color: COLORS.secondaryText,
     lineHeight: 16,
   },
   actionSection: {
-    paddingBottom: SPACING.sm,
+    paddingTop: SPACING.xs,
   },
   primaryBtn: {
-    marginBottom: SPACING.sm + 2,
+    marginBottom: SPACING.sm,
   },
   secondaryBtn: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.white,
+    marginBottom: SPACING.sm,
   },
   versionNote: {
     fontSize: TYPOGRAPHY.xs - 1,
-    color: '#64748B',
+    color: COLORS.secondaryText,
     textAlign: 'center',
-    marginTop: SPACING.md,
+    marginTop: 2,
   },
 });

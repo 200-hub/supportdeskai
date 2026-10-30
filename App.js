@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
 import { StyleSheet, View, StatusBar } from 'react-native';
 import {
@@ -7,6 +8,21 @@ import {
 
 import { COLORS } from './src/theme/colors';
 import { useTopInset } from './src/hooks/useTopInset';
+=======
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, StatusBar, Appearance } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { COLORS } from './src/theme/colors';
+
+// Explicitly lock app appearance to fixed light mode
+if (Appearance && Appearance.setColorScheme) {
+  try {
+    Appearance.setColorScheme('light');
+  } catch (e) {
+    // Ignore if not supported in environment
+  }
+}
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
 import {
   INITIAL_USER,
   INITIAL_TICKETS,
@@ -486,25 +502,45 @@ export default function App() {
     authScreen === null &&
     activeOverlay === null &&
     currentUser.role === 'customer' &&
+<<<<<<< HEAD
     customerTab !== 'chat'; // Hide bottom nav on chat tab so AIChatScreen fills the full screen
 
   const showAgentTabBar =
     authScreen === null &&
     activeOverlay === null &&
     currentUser.role === 'agent';
+=======
+    customerTab !== 'chat';
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
 
   const unreadTicketsCount = tickets.filter((t) => t.status === 'open').length;
   const unreadNotifsCount = notifications.filter((n) => !n.isRead).length;
 
+  const isAuthScreen = authScreen !== null;
+
   return (
     <SafeAreaProvider>
       <StatusBar
+<<<<<<< HEAD
         barStyle="light-content"
         backgroundColor={COLORS.primaryNavy}
       />
 
       <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
         <StatusBarSpacer />
+=======
+        barStyle={isAuthScreen ? 'dark-content' : 'light-content'}
+        backgroundColor={isAuthScreen ? COLORS.lightBg : COLORS.primaryNavy}
+        translucent={false}
+      />
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: isAuthScreen ? COLORS.lightBg : COLORS.primaryNavy },
+        ]}
+        edges={['top']}
+      >
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
         <View style={styles.container}>
           {renderScreen()}
 

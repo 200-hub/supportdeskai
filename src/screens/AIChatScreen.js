@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -25,6 +26,7 @@ export const AIChatScreen = ({
   onEscalateToTicket,
   onUpdateConversation,
 }) => {
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState(
     initialConversation?.messages || [
       {
@@ -32,13 +34,14 @@ export const AIChatScreen = ({
         senderType: 'assistant',
         senderName: 'SupportDesk AI Bot',
         time: 'Just now',
-        content: 'Hello! I am your SupportDesk AI assistant. Ask me anything about your orders, invoices, or technical integrations.',
+        content: 'Hello! I am your SupportDesk AI assistant. Ask me anything about orders, invoices, or technical integrations.',
         isDemo: true,
       },
     ]
   );
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+<<<<<<< HEAD
   const scrollViewRef = useRef();
   const insets = useSafeAreaInsets();
   const topInset = useTopInset();
@@ -69,6 +72,33 @@ export const AIChatScreen = ({
       scrollViewRef.current?.scrollToEnd({ animated: true });
     });
     return () => sub.remove();
+=======
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(() =>
+    Keyboard.isVisible ? Keyboard.isVisible() : false
+  );
+  const scrollViewRef = useRef(null);
+
+  // Keyboard listeners for clean responsive padding adjustment on Android & iOS
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      setIsKeyboardVisible(true);
+      requestAnimationFrame(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      });
+    });
+
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
   }, []);
 
   const suggestedQuestions = [
@@ -80,7 +110,7 @@ export const AIChatScreen = ({
 
   const handleSend = (textToSend) => {
     const text = textToSend || inputText;
-    if (!text.trim()) return;
+    if (!text || !text.trim()) return;
 
     const userMsg = {
       id: `usr-${Date.now()}`,
@@ -95,6 +125,7 @@ export const AIChatScreen = ({
     setInputText('');
     setIsTyping(true);
 
+<<<<<<< HEAD
     const activeConvId = initialConversation?.id || currentConvIdRef.current;
     const conversationTitle =
       initialConversation?.title ||
@@ -116,6 +147,13 @@ export const AIChatScreen = ({
     }
 
     // Simulated local demo response with grounded knowledge context
+=======
+    // Scroll to bottom immediately on send
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 50);
+
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
     setTimeout(() => {
       let replyContent =
         'Thank you for reaching out! In this local demo mode, SupportDesk AI has matched your inquiry with verified tenant documentation. For live operational requests, you can escalate this thread directly into an omnichannel support ticket.';
@@ -145,6 +183,7 @@ export const AIChatScreen = ({
       };
 
       setIsTyping(false);
+<<<<<<< HEAD
       const finalMessages = [...updatedMessages, aiReply];
       setMessages(finalMessages);
 
@@ -157,15 +196,30 @@ export const AIChatScreen = ({
         });
       }
     }, 900);
+=======
+      setMessages((prev) => [...prev, aiReply]);
+
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 80);
+    }, 850);
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
   };
+
+  const hasFewMessages = messages.length <= 2;
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
+<<<<<<< HEAD
       behavior="padding"
       // KAV measures itself relative to its parent, not the screen; App's
       // StatusBarSpacer pushes it down by the top inset, which varies per device.
       keyboardVerticalOffset={topInset}
+=======
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={0}
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
     >
       <View style={styles.innerContainer}>
         {/* Top Header */}
@@ -176,18 +230,20 @@ export const AIChatScreen = ({
               activeOpacity={0.7}
               onPress={onNavigateBack}
               style={styles.backBtn}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <Ionicons name="arrow-back" size={22} color={COLORS.white} />
             </TouchableOpacity>
           )}
 
           <View style={styles.assistantAvatar}>
-            <Ionicons name="sparkles" size={18} color={COLORS.accentTeal} />
+            <Ionicons name="sparkles" size={17} color={COLORS.accentTeal} />
           </View>
 
           <View style={styles.assistantInfo}>
-            <Text style={styles.assistantName}>SupportDesk AI Assistant</Text>
+            <Text style={styles.assistantName} numberOfLines={1}>
+              SupportDesk AI Assistant
+            </Text>
             <View style={styles.statusRow}>
               <View style={styles.statusDot} />
               <Text style={styles.statusText}>Online • 24/7 Grounded AI</Text>
@@ -201,10 +257,17 @@ export const AIChatScreen = ({
               activeOpacity={0.7}
               onPress={onEscalateToTicket}
               style={styles.escalateBtn}
+<<<<<<< HEAD
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Ionicons name="ticket-outline" size={15} color={COLORS.white} style={{ marginRight: 4 }} />
               <Text style={styles.escalateBtnText}>Create Ticket</Text>
+=======
+              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+            >
+              <Ionicons name="add" size={14} color={COLORS.white} style={{ marginRight: 2 }} />
+              <Text style={styles.escalateBtnText}>Ticket</Text>
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
             </TouchableOpacity>
           )}
 
@@ -215,7 +278,7 @@ export const AIChatScreen = ({
               style={styles.historyBtn}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="time-outline" size={20} color={COLORS.white} />
+              <Ionicons name="time-outline" size={19} color={COLORS.white} />
             </TouchableOpacity>
           )}
         </View>
@@ -223,9 +286,9 @@ export const AIChatScreen = ({
 
       {/* Demo Notice Banner */}
       <View style={styles.demoNoticeBanner}>
-        <Ionicons name="information-circle-outline" size={14} color={COLORS.primaryNavy} style={{ marginRight: 5 }} />
-        <Text style={styles.demoNoticeText}>
-          Demo Mode: Responses are locally simulated to showcase AI deflection behavior.
+        <Ionicons name="information-circle-outline" size={14} color={COLORS.primaryNavy} style={{ marginRight: 6 }} />
+        <Text style={styles.demoNoticeText} numberOfLines={1}>
+          Demo: Responses locally simulated with verified grounding.
         </Text>
       </View>
 
@@ -235,7 +298,14 @@ export const AIChatScreen = ({
         style={styles.messageScroll}
         contentContainerStyle={styles.messageContent}
         keyboardShouldPersistTaps="handled"
+<<<<<<< HEAD
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+=======
+        keyboardDismissMode="on-drag"
+        onLayout={() => {
+          scrollViewRef.current?.scrollToEnd({ animated: false });
+        }}
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
         {messages.map((item) => (
@@ -256,30 +326,55 @@ export const AIChatScreen = ({
             <View style={styles.typingDot} />
             <View style={[styles.typingDot, { marginHorizontal: 4 }]} />
             <View style={styles.typingDot} />
-            <Text style={styles.typingText}>SupportDesk AI is searching knowledge base...</Text>
+            <Text style={styles.typingText}>Searching knowledge base...</Text>
           </View>
         )}
       </ScrollView>
 
-      {/* Suggested Quick Questions */}
-      <View style={styles.suggestionsContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestionsScroll}>
-          {suggestedQuestions.map((q, idx) => (
-            <TouchableOpacity
-              key={idx}
-              activeOpacity={0.7}
-              onPress={() => handleSend(q)}
-              style={styles.suggestionChip}
-            >
-              <Ionicons name="bulb-outline" size={12} color={COLORS.primaryNavy} style={{ marginRight: 4 }} />
-              <Text style={styles.suggestionText}>{q}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+      {/* Suggested Quick Questions Row (Kept stable without jarring mounts/unmounts) */}
+      {hasFewMessages && !isKeyboardVisible && (
+        <View style={styles.suggestionsContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.suggestionsScroll}
+            keyboardShouldPersistTaps="handled"
+          >
+            {suggestedQuestions.map((q, idx) => (
+              <TouchableOpacity
+                key={idx}
+                activeOpacity={0.7}
+                onPress={() => handleSend(q)}
+                style={styles.suggestionChip}
+              >
+                <Ionicons name="bulb-outline" size={13} color={COLORS.primaryNavy} style={{ marginRight: 5 }} />
+                <Text style={styles.suggestionText} numberOfLines={1}>
+                  {q}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
+<<<<<<< HEAD
       {/* Message Composer */}
       <View style={[styles.composerBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : SPACING.sm }]}>
+=======
+      {/* Message Composer Bar */}
+      <View
+        style={[
+          styles.composerBar,
+          {
+            paddingBottom: isKeyboardVisible
+              ? SPACING.sm
+              : insets.bottom > 0
+                ? insets.bottom + SPACING.sm
+                : SPACING.md,
+          },
+        ]}
+      >
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
         <View style={styles.inputWrapper}>
           <TextInput
             placeholder="Type your question or request..."
@@ -288,6 +383,17 @@ export const AIChatScreen = ({
             onChangeText={setInputText}
             style={styles.composerInput}
             multiline
+            maxHeight={100}
+            underlineColorAndroid="transparent"
+            onPressIn={() => {
+              setIsKeyboardVisible(true);
+            }}
+            onFocus={() => {
+              setIsKeyboardVisible(true);
+              setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+              }, 100);
+            }}
           />
           <TouchableOpacity
             activeOpacity={0.8}
@@ -295,10 +401,17 @@ export const AIChatScreen = ({
             disabled={!inputText.trim()}
             style={[
               styles.sendButton,
-              { backgroundColor: inputText.trim() ? COLORS.accentTeal : COLORS.border },
+              {
+                backgroundColor: inputText.trim() ? COLORS.accentTeal : '#E2E8F0',
+              },
             ]}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="arrow-up" size={18} color={COLORS.white} />
+            <Ionicons
+              name="arrow-up"
+              size={18}
+              color={inputText.trim() ? COLORS.white : '#94A3B8'}
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -310,34 +423,38 @@ export const AIChatScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    minHeight: 0,
     backgroundColor: COLORS.lightBg,
+    overflow: 'hidden',
   },
   innerContainer: {
     flex: 1,
   },
   chatHeader: {
     backgroundColor: COLORS.primaryNavy,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.md,
-    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.sm + 2,
+    paddingBottom: SPACING.sm + 2,
+    paddingHorizontal: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
     borderBottomColor: COLORS.secondaryNavy,
+    minHeight: 56,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    marginRight: SPACING.xs,
   },
   backBtn: {
     padding: SPACING.xs,
-    marginRight: SPACING.sm,
+    marginRight: 6,
   },
   assistantAvatar: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: RADIUS.sm,
     backgroundColor: COLORS.secondaryNavy,
     alignItems: 'center',
@@ -366,7 +483,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: TYPOGRAPHY.xs - 1,
-    color: COLORS.border,
+    color: '#94A3B8',
   },
   headerRight: {
     flexDirection: 'row',
@@ -376,6 +493,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.accentTeal,
+<<<<<<< HEAD
     borderRadius: RADIUS.sm,
     paddingVertical: 6,
     paddingHorizontal: 10,
@@ -384,35 +502,54 @@ const styles = StyleSheet.create({
   escalateBtnText: {
     color: COLORS.white,
     fontSize: TYPOGRAPHY.xs,
+=======
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    borderRadius: RADIUS.xs,
+    marginRight: 6,
+  },
+  escalateBtnText: {
+    fontSize: 11,
+    color: COLORS.white,
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
     fontWeight: TYPOGRAPHY.bold,
   },
   historyBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: RADIUS.sm,
+    width: 32,
+    height: 32,
+    borderRadius: RADIUS.xs,
     backgroundColor: COLORS.secondaryNavy,
     alignItems: 'center',
     justifyContent: 'center',
   },
   demoNoticeBanner: {
-    backgroundColor: '#CCFBF1',
-    paddingVertical: 5,
+    backgroundColor: '#F0FDFA',
+    paddingVertical: 6,
     paddingHorizontal: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#CCFBF1',
   },
   demoNoticeText: {
-    fontSize: TYPOGRAPHY.xs,
+    fontSize: 11,
     color: COLORS.primaryNavy,
+    fontWeight: TYPOGRAPHY.medium,
     flex: 1,
   },
   messageScroll: {
     flex: 1,
+    minHeight: 0,
   },
   messageContent: {
+<<<<<<< HEAD
     padding: SPACING.lg,
     paddingBottom: SPACING.md,
     flexGrow: 1,
+=======
+    padding: SPACING.md,
+    paddingBottom: SPACING.sm,
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
   },
   typingContainer: {
     flexDirection: 'row',
@@ -439,7 +576,7 @@ const styles = StyleSheet.create({
   },
   suggestionsContainer: {
     backgroundColor: COLORS.white,
-    paddingVertical: SPACING.xs + 2,
+    paddingVertical: 6,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
@@ -465,26 +602,30 @@ const styles = StyleSheet.create({
   composerBar: {
     backgroundColor: COLORS.white,
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
+    paddingTop: 8,
+    paddingBottom: 8,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+    flexShrink: 0,
   },
   inputWrapper: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.lightBg,
-    borderRadius: RADIUS.full,
+    alignItems: 'flex-end',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingHorizontal: SPACING.md,
+    paddingVertical: 4,
     minHeight: 44,
   },
   composerInput: {
     flex: 1,
-    fontSize: TYPOGRAPHY.sm,
+    fontSize: 14,
     color: COLORS.mainText,
-    paddingVertical: 8,
-    maxHeight: 90,
+    paddingVertical: Platform.OS === 'ios' ? 8 : 6,
+    maxHeight: 100,
+    textAlignVertical: 'center',
   },
   sendButton: {
     width: 32,
@@ -493,5 +634,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: SPACING.xs,
+    marginBottom: 2,
   },
 });

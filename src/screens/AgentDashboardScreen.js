@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -29,7 +30,12 @@ export const AgentDashboardScreen = ({
   onUpdateTicket,
   onRefresh,
 }) => {
+<<<<<<< HEAD
   const [selectedFilter, setSelectedFilter] = useState('assigned'); // 'assigned', 'unassigned', 'open', 'pending', 'resolved', 'urgent', 'all'
+=======
+  const insets = useSafeAreaInsets();
+  const [selectedFilter, setSelectedFilter] = useState('assigned'); // 'assigned', 'all', 'open', 'urgent'
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
@@ -214,6 +220,7 @@ export const AgentDashboardScreen = ({
 
       <ScrollView
         style={styles.scrollArea}
+<<<<<<< HEAD
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
@@ -223,6 +230,12 @@ export const AgentDashboardScreen = ({
             tintColor={COLORS.primaryNavy}
           />
         }
+=======
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom, 24) },
+        ]}
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
       >
         {/* Metric Cards Row */}
         <View style={styles.metricsGrid}>
@@ -284,6 +297,7 @@ export const AgentDashboardScreen = ({
         </View>
 
         {/* SLA Escalation Bar */}
+<<<<<<< HEAD
         {atRiskCount > 0 && (
           <View style={styles.slaBanner}>
             <View style={styles.slaLeft}>
@@ -296,6 +310,14 @@ export const AgentDashboardScreen = ({
                   First response target must be delivered.
                 </Text>
               </View>
+=======
+        <View style={styles.slaBanner}>
+          <View style={styles.slaLeft}>
+            <Ionicons name="warning" size={18} color="#DC2626" style={{ marginRight: SPACING.sm }} />
+            <View>
+              <Text style={styles.slaTitle}>2 Tickets Near SLA Breach (&lt; 20m)</Text>
+              <Text style={styles.slaDesc}>First response target must be delivered.</Text>
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
             </View>
             <TouchableOpacity
               activeOpacity={0.7}

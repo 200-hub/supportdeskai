@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -30,6 +31,11 @@ export const CustomerHomeScreen = ({
   onNavigateToNotifications,
   onSwitchRole,
 }) => {
+<<<<<<< HEAD
+=======
+  const insets = useSafeAreaInsets();
+  const [search, setSearch] = useState('');
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
 
   const openCount = tickets.filter((t) => t.status === 'open').length;
   const pendingCount = tickets.filter((t) => t.status === 'pending').length;
@@ -46,7 +52,7 @@ export const CustomerHomeScreen = ({
         <View style={styles.userRow}>
           <Avatar
             initials={user?.avatarInitials || 'SC'}
-            size={42}
+            size={40}
             bgColor={COLORS.secondaryNavy}
           />
           <View style={styles.userTextGroup}>
@@ -82,7 +88,13 @@ export const CustomerHomeScreen = ({
         </View>
       </View>
 
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom, 16) + 64 },
+        ]}
+      >
         {/* Search Field */}
         <TouchableOpacity
           activeOpacity={0.8}
@@ -96,11 +108,16 @@ export const CustomerHomeScreen = ({
         {/* Primary Action Buttons (2 buttons side by side) */}
         <View style={styles.primaryActionRow}>
           <AppButton
+<<<<<<< HEAD
             title="Start a Conversation"
             onPress={() => onNavigateToChat && onNavigateToChat()}
+=======
+            title="Live AI Chat"
+            onPress={onNavigateToChat}
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
             variant="teal"
             size="md"
-            icon={<Ionicons name="chatbubbles" size={17} color={COLORS.white} />}
+            icon={<Ionicons name="chatbubbles" size={16} color={COLORS.white} />}
             style={styles.halfBtn}
           />
 
@@ -109,7 +126,7 @@ export const CustomerHomeScreen = ({
             onPress={() => onNavigateToCreateTicket && onNavigateToCreateTicket()}
             variant="primary"
             size="md"
-            icon={<Ionicons name="add-circle-outline" size={17} color={COLORS.white} />}
+            icon={<Ionicons name="add-circle-outline" size={16} color={COLORS.white} />}
             style={styles.halfBtn}
           />
         </View>

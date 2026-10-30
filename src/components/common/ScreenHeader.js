@@ -11,17 +11,9 @@ export const ScreenHeader = ({
   showBack = false,
   onBack,
   rightAction,
-  theme = 'navy', // 'navy' | 'light'
 }) => {
-  const isNavy = theme === 'navy';
-  const bgColor = isNavy ? COLORS.primaryNavy : COLORS.white;
-  const textColor = isNavy ? COLORS.white : COLORS.mainText;
-  const subtextColor = isNavy ? '#94A3B8' : COLORS.secondaryText;
-  const borderColor = isNavy ? COLORS.secondaryNavy : COLORS.border;
-  const iconColor = isNavy ? COLORS.white : COLORS.mainText;
-
   return (
-    <View style={[styles.header, { backgroundColor: bgColor, borderBottomColor: borderColor }]}>
+    <View style={styles.header}>
       <View style={styles.leftGroup}>
         {showBack && (
           <TouchableOpacity
@@ -30,16 +22,16 @@ export const ScreenHeader = ({
             style={styles.backButton}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Ionicons name="arrow-back" size={22} color={iconColor} />
+            <Ionicons name="arrow-back" size={22} color={COLORS.white} />
           </TouchableOpacity>
         )}
 
         <View style={styles.titleColumn}>
-          <Text style={[styles.title, { color: textColor }]} numberOfLines={1}>
+          <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
           {subtitle ? (
-            <Text style={[styles.subtitle, { color: subtextColor }]} numberOfLines={1}>
+            <Text style={styles.subtitle} numberOfLines={1}>
               {subtitle}
             </Text>
           ) : null}
@@ -53,6 +45,7 @@ export const ScreenHeader = ({
 
 const styles = StyleSheet.create({
   header: {
+    backgroundColor: COLORS.primaryNavy,
     paddingTop: SPACING.md,
     paddingBottom: SPACING.md,
     paddingHorizontal: SPACING.lg,
@@ -60,6 +53,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
+    borderBottomColor: COLORS.secondaryNavy,
     minHeight: 60,
   },
   leftGroup: {
@@ -78,10 +72,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: TYPOGRAPHY.lg,
     fontWeight: TYPOGRAPHY.bold,
+    color: COLORS.white,
     letterSpacing: 0.1,
   },
   subtitle: {
     fontSize: TYPOGRAPHY.xs,
+    color: '#94A3B8',
     marginTop: 2,
   },
   rightGroup: {

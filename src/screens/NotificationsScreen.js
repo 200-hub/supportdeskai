@@ -6,6 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
+<<<<<<< HEAD
+=======
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -19,6 +24,7 @@ export const NotificationsScreen = ({
   onMarkAllAsRead,
   onNavigateBack,
 }) => {
+  const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState('all'); // 'all', 'unread', 'alerts'
 
   const filtered = notifications.filter((n) => {
@@ -84,7 +90,10 @@ export const NotificationsScreen = ({
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: Math.max(insets.bottom, 24) },
+        ]}
         renderItem={({ item }) => (
           <NotificationItem
             title={item.title}

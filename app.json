@@ -6,10 +6,21 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+<<<<<<< HEAD
+=======
+    "splash": {
+      "backgroundColor": "#F5F7FA"
+    },
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "userInterfaceStyle": "light"
     },
     "android": {
+<<<<<<< HEAD
+=======
+      "userInterfaceStyle": "light",
+>>>>>>> 27a643b791f9a6e484ca08e0a9a840cd59066285
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#14213D",
@@ -17,6 +28,15 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       }
+    },
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#14213D",
+      "translucent": false
+    },
+    "androidNavigationBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#FFFFFF"
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
@@ -22,6 +23,7 @@ export const AdminSettingsScreen = ({
   onSwitchRole,
   onLogout,
 }) => {
+  const insets = useSafeAreaInsets();
   const [assignmentRule, setAssignmentRule] = useState('Least-Load & Skill');
   const [autoCloseEnabled, setAutoCloseEnabled] = useState(true);
   const [aiDeflectionEnabled, setAiDeflectionEnabled] = useState(true);
@@ -58,7 +60,13 @@ export const AdminSettingsScreen = ({
         }
       />
 
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom, 24) },
+        ]}
+      >
         {/* Backend Disclaimer Banner */}
         <View style={styles.disclaimerBanner}>
           <Ionicons name="warning-outline" size={16} color="#92400E" style={{ marginRight: 6 }} />
