@@ -500,3 +500,18 @@ export const ADMIN_SETTINGS_DATA = {
   whatsappChannelConnected: true,
   chatWidgetActive: true,
 };
+
+
+export const ANALYTICS_METRICS = {
+  avgFirstResponseTime: '8m 42s',
+  slaComplianceRate: '96.4%',
+  avgResolutionTime: '1h 38m',
+  csatScore: '4.9',
+  csatTotalReviews: '847',
+  channelBreakdown: [
+    { channel: 'Email', count: 48, percentage: 43, color: '#14213D' },
+    { channel: 'WhatsApp', count: 31, percentage: 27, color: '#16B8A6' },
+    { channel: 'Live Chat', count: 22, percentage: 20, color: '#1F3155' },
+    { channel: 'Web Form', count: 12, percentage: 10, color: '#697586' },
+  ],
+};

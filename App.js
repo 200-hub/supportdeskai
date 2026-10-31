@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, StatusBar } from 'react-native';
 import {
   SafeAreaView,
@@ -37,6 +37,9 @@ import { AICopilotScreen } from './src/screens/AICopilotScreen';
 import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
 import { KnowledgeBaseScreen } from './src/screens/KnowledgeBaseScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { authService } from './src/services/authService';
+import { syncManager } from './src/services/syncManager';
+import { offlineStorage } from './src/services/offlineStorage';
 
 export default function App() {
   // Authentication state
@@ -64,26 +67,51 @@ export default function App() {
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [ticketFilter, setTicketFilter] = useState('all');
 
+  // Restore authenticated session and offline cache on mount
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const session = await authService.restoreSession();
+        if (session.isAuthenticated && session.user && isMounted) {
+          setCurrentUser(session.user);
+          setAuthScreen(null);
+          // Load tickets from offline cache / backend
+          const ticketRes = await syncManager.loadTickets(session.token);
+          if (ticketRes.tickets?.length > 0 && isMounted) {
+            setTickets(ticketRes.tickets);
+          }
+          // Process any offline queued actions
+          await syncManager.processOfflineQueue(session.token);
+        }
+      } catch (e) {
+        console.warn('Session restoration failed:', e);
+      }
+    })();
+    return () => { isMounted = false; };
+  }, []);
+
   // Authentication handlers
   const handleGetStarted = () => setAuthScreen('register');
   const handleGoToLogin = () => setAuthScreen('login');
   const handleGoToRegister = () => setAuthScreen('register');
   const handleBackToWelcome = () => setAuthScreen('welcome');
 
-  const handleLoginSuccess = ({ email, role }) => {
-    const updatedUser = {
+  const handleLoginSuccess = ({ email, role, name, user, token }) => {
+    const updatedUser = user || {
       ...currentUser,
       email,
       role: role || 'customer',
-      name:
-        role === 'agent'
-          ? 'Sayoni Bhattacharjee'
-          : role === 'admin'
-            ? 'Admin Sayoni'
-            : 'Sarah Connor',
-      avatarInitials:
-        role === 'agent' ? 'SB' : role === 'admin' ? 'AS' : 'SC',
+      name: name || (role === 'agent' ? 'Sayoni Bhattacharjee' : role === 'admin' ? 'Admin Sayoni' : 'Sarah Connor'),
+      avatarInitials: role === 'agent' ? 'SB' : role === 'admin' ? 'AS' : 'SC',
     };
+
+    if (token) {
+      syncManager.loadTickets(token).then((res) => {
+        if (res.tickets?.length > 0) setTickets(res.tickets);
+      });
+      syncManager.processOfflineQueue(token);
+    }
 
     setCurrentUser(updatedUser);
     setAuthScreen(null);
@@ -127,6 +155,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    authService.logout();
     setCurrentUser(INITIAL_USER);
     setAuthScreen('welcome');
     setActiveOverlay(null);

@@ -16,6 +16,7 @@ import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
 import { AppTextInput } from '../components/common/AppTextInput';
 import { AppButton } from '../components/common/AppButton';
+import { authService } from '../services/authService';
 
 export const LoginScreen = ({
   onLoginSuccess,
@@ -50,13 +51,29 @@ export const LoginScreen = ({
     setErrors({});
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-      onLoginSuccess({
-        email: email.trim(),
-        role: selectedRole,
+    authService
+      .login(email.trim(), password, selectedRole)
+      .then((res) => {
+        setLoading(false);
+        if (res.success) {
+          onLoginSuccess({
+            email: res.user?.email || email.trim(),
+            role: res.user?.role || selectedRole,
+            name: res.user?.name,
+            user: res.user,
+            token: res.token,
+          });
+        } else {
+          Alert.alert('Sign In Failed', res.error || 'Invalid credentials');
+        }
+      })
+      .catch(() => {
+        setLoading(false);
+        onLoginSuccess({
+          email: email.trim(),
+          role: selectedRole,
+        });
       });
-    }, 500);
   };
 
   const handleForgotPassword = () => {

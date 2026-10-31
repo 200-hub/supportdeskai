@@ -18,6 +18,9 @@ import { ScreenHeader } from '../components/common/ScreenHeader';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { PriorityBadge } from '../components/common/PriorityBadge';
 import { ChatBubble } from '../components/common/ChatBubble';
+import { syncManager } from '../services/syncManager';
+import { ticketService } from '../services/ticketService';
+import { getApiAuthToken } from '../services/apiClient';
 
 export const TicketDetailsScreen = ({
   ticket,
@@ -37,6 +40,22 @@ export const TicketDetailsScreen = ({
       setMessages(ticket.messages || []);
       setTicketStatus(ticket.status || 'open');
       setReplyText('');
+
+      const token = getApiAuthToken();
+      if (token && ticket.id) {
+        ticketService.getMessages(ticket.id, token).then((res) => {
+          if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+            const mapped = res.data.map((m) => ({
+              id: m.id,
+              senderType: m.sender_type,
+              senderName: m.sender_name,
+              content: m.content,
+              time: m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
+            }));
+            setMessages(mapped);
+          }
+        }).catch(() => {});
+      }
     }
   }, [ticket?.id]);
 
@@ -47,17 +66,26 @@ export const TicketDetailsScreen = ({
     return () => clearTimeout(timer);
   }, [messages.length]);
 
-  const handleSendReply = () => {
+  const handleSendReply = async () => {
     if (!replyText.trim()) return;
+
+    const senderType = isNoteMode
+      ? 'internal_note'
+      : user?.role === 'agent' || user?.role === 'admin'
+      ? 'agent'
+      : 'customer';
+
+    const content = replyText.trim();
+    const token = getApiAuthToken();
 
     const newMsg = {
       id: `msg-${Date.now()}`,
-      senderType: isNoteMode ? 'internal_note' : user?.role === 'agent' ? 'agent' : 'customer',
+      senderType,
       senderName: isNoteMode
         ? `${user?.name || 'You'} (Internal Note)`
-        : user?.name || 'Sarah Connor',
+        : user?.name || 'Me',
       time: 'Just now',
-      content: replyText.trim(),
+      content,
     };
 
     const updatedMessages = [...messages, newMsg];
@@ -72,9 +100,21 @@ export const TicketDetailsScreen = ({
         updatedAt: 'Just now',
       });
     }
+
+    try {
+      await syncManager.addMessage(
+        ticket.id,
+        {
+          content,
+          sender_type: senderType,
+          sender_name: user?.name || 'User',
+        },
+        token
+      );
+    } catch (_) {}
   };
 
-  const handleToggleStatus = () => {
+  const handleToggleStatus = async () => {
     const nextStatus =
       ticketStatus === 'open' ? 'pending' : ticketStatus === 'pending' ? 'resolved' : 'open';
     setTicketStatus(nextStatus);
@@ -84,6 +124,13 @@ export const TicketDetailsScreen = ({
         status: nextStatus,
       });
     }
+
+    try {
+      const token = getApiAuthToken();
+      if (token && ticket?.id) {
+        await ticketService.updateTicket(ticket.id, { status: nextStatus }, token);
+      }
+    } catch (_) {}
   };
 
   const isAgentOrAdmin = user?.role === 'agent' || user?.role === 'admin';

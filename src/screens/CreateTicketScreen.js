@@ -19,6 +19,8 @@ import { SPACING, RADIUS } from '../theme/spacing';
 import { ScreenHeader } from '../components/common/ScreenHeader';
 import { AppTextInput } from '../components/common/AppTextInput';
 import { AppButton } from '../components/common/AppButton';
+import { syncManager } from '../services/syncManager';
+import { getApiAuthToken } from '../services/apiClient';
 
 export const CreateTicketScreen = ({
   user,
@@ -118,7 +120,7 @@ export const CreateTicketScreen = ({
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const newErrors = {};
 
     if (!subject.trim()) {
@@ -141,24 +143,39 @@ export const CreateTicketScreen = ({
     setErrors({});
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-
-      const newId = `SD-${Math.floor(1000 + Math.random() * 9000)}`;
-      const newTicket = {
-        id: newId,
+    try {
+      const ticketPayload = {
         subject: subject.trim(),
         description: description.trim(),
         category,
         channel: 'web',
-        status: 'open',
         priority,
+        customer_name: user?.name,
+        customer_email: user?.email,
+        customer_company: user?.company,
+      };
+
+      const token = getApiAuthToken();
+      const syncResult = await syncManager.createTicket(ticketPayload, token);
+
+      setLoading(false);
+      const createdTicket = syncResult.ticket;
+
+      const normalizedTicket = {
+        ...createdTicket,
+        id: createdTicket.id,
+        subject: createdTicket.subject || subject.trim(),
+        description: createdTicket.description || description.trim(),
+        category: createdTicket.category || category,
+        channel: createdTicket.channel || 'web',
+        status: createdTicket.status || 'open',
+        priority: createdTicket.priority || priority,
         createdDate: 'Just now',
         customer: {
-          name: user?.name || 'Sarah Connor',
-          email: user?.email || 'sarah.connor@cyberdyne.org',
-          company: user?.company || 'Cyberdyne Systems Corp',
-          avatarInitials: user?.avatarInitials || 'SC',
+          name: user?.name || 'Customer',
+          email: user?.email || '',
+          company: user?.company || '',
+          avatarInitials: user?.avatarInitials || 'CU',
           tier: 'Enterprise',
           csatAvg: '4.8',
         },
@@ -172,19 +189,19 @@ export const CreateTicketScreen = ({
             ? att
             : `${att.name}${att.size ? ` (${att.size})` : ''}`
         ),
-        messages: [
+        messages: createdTicket.messages || [
           {
             id: `msg-${Date.now()}`,
             senderType: 'customer',
-            senderName: user?.name || 'Sarah Connor',
+            senderName: user?.name || 'Customer',
             time: 'Just now',
             content: description.trim(),
           },
         ],
-        timeline: [
+        timeline: createdTicket.timeline || [
           {
             id: `t-${Date.now()}`,
-            title: `Ticket Created (#${newId})`,
+            title: `Ticket Created (#${createdTicket.id})`,
             time: 'Just now',
             by: user?.name || 'Customer',
           },
@@ -192,26 +209,37 @@ export const CreateTicketScreen = ({
       };
 
       if (onCreateTicket) {
-        onCreateTicket(newTicket);
+        onCreateTicket(normalizedTicket);
       }
 
       Alert.alert(
         'Ticket Submitted Successfully',
-        `Ticket #${newId} has been added to your local session queue.\n\n(Demo Note: This demo adds the ticket to local application state. Connect a backend API for remote persistence.)`,
+        `Ticket #${createdTicket.id} has been submitted successfully.${syncResult.online ? '' : '\n(Saved locally; will synchronize when connection is restored.)'}`,
         [
           {
             text: 'View Ticket',
             onPress: () => {
               if (onViewTicket) {
-                onViewTicket(newTicket);
+                onViewTicket(normalizedTicket);
               } else if (onNavigateBack) {
+                onNavigateBack();
+              }
+            },
+          },
+          {
+            text: 'Close',
+            onPress: () => {
+              if (onNavigateBack) {
                 onNavigateBack();
               }
             },
           },
         ]
       );
-    }, 700);
+    } catch (err) {
+      setLoading(false);
+      Alert.alert('Error', err.message || 'Failed to submit ticket');
+    }
   };
 
   return (
