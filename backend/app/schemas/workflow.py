@@ -152,12 +152,35 @@ class MacroApplyResponse(BaseModel):
 
 
 # ---------------- Automation Schemas ----------------
+VALID_TRIGGERS = {"ticket_created", "ticket_updated", "status_changed", "priority_changed"}
+VALID_CONDITION_OPS = {"==", "!=", "in", "not_in", "contains", "not_contains", "starts_with", "ends_with", "equals", "not_equals"}
+VALID_CONDITION_FIELDS = {"status", "priority", "channel", "category", "is_spam", "sla_status", "subject", "tags"}
+VALID_AUTOMATION_ACTIONS = {
+    "set_status",
+    "set_priority",
+    "add_tag",
+    "remove_tag",
+    "assign_agent",
+    "assign_team",
+    "add_internal_note",
+    "set_sla_paused",
+}
+
+
 class AutomationRuleCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)
-    trigger_event: str = Field(default="ticket_created", description="ticket_created, ticket_updated")
-    conditions: List[Dict[str, Any]] = Field(default=[], description="List of conditions: [{field, op, value}]")
+    trigger_event: str = Field(default="ticket_created", description="ticket_created, ticket_updated, status_changed, priority_changed")
+    conditions: List[Dict[str, Any]] = Field(default_factory=list, description="List of conditions: [{field, op, value}]")
     actions: List[Dict[str, Any]] = Field(..., description="List of actions: [{action, value}]")
     is_active: bool = True
+
+
+class AutomationRuleUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=100)
+    trigger_event: Optional[str] = None
+    conditions: Optional[List[Dict[str, Any]]] = None
+    actions: Optional[List[Dict[str, Any]]] = None
+    is_active: Optional[bool] = None
 
 
 class AutomationRuleResponse(BaseModel):
@@ -173,6 +196,24 @@ class AutomationRuleResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AutomationLogResponse(BaseModel):
+    id: str
+    tenant_id: str
+    rule_id: str
+    ticket_id: str
+    status: str
+    details: Dict[str, Any]
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AutomationExecutionResponse(BaseModel):
+    rule_id: str
+    rule_name: str
+    applied: List[str]
 
 
 # ---------------- Invitations & Workspace Schemas ----------------

@@ -212,6 +212,89 @@ export const adminService = {
   },
 
   /**
+   * Fetch workspace automation rules
+   */
+  async getAutomationRules(triggerEvent = null, includeInactive = true) {
+    const params = [];
+    if (triggerEvent) params.push(`trigger_event=${encodeURIComponent(triggerEvent)}`);
+    if (includeInactive !== null) params.push(`include_inactive=${includeInactive}`);
+    const query = params.length > 0 ? `?${params.join('&')}` : '';
+
+    const res = await api.get(`/api/v1/automations/${query}`);
+    if (res.success && Array.isArray(res.data)) {
+      return { success: true, data: res.data };
+    }
+    return {
+      success: false,
+      error: res.error || 'Failed to load automation rules',
+      data: [],
+      isOffline: res.isNetworkError,
+    };
+  },
+
+  /**
+   * Retrieve a single automation rule by ID
+   */
+  async getAutomationRule(ruleId) {
+    const res = await api.get(`/api/v1/automations/${ruleId}`);
+    return res;
+  },
+
+  /**
+   * Create a new automation rule
+   */
+  async createAutomationRule(ruleData) {
+    const res = await api.post('/api/v1/automations/', ruleData);
+    return res;
+  },
+
+  /**
+   * Update an existing automation rule by ID
+   */
+  async updateAutomationRule(ruleId, ruleData) {
+    const res = await api.patch(`/api/v1/automations/${ruleId}`, ruleData);
+    return res;
+  },
+
+  /**
+   * Delete an automation rule by ID
+   */
+  async deleteAutomationRule(ruleId) {
+    const res = await api.delete(`/api/v1/automations/${ruleId}`);
+    return res;
+  },
+
+  /**
+   * Manually trigger/execute automations for a ticket event
+   */
+  async executeAutomations(ticketId, eventType = 'ticket_created') {
+    const res = await api.post(`/api/v1/automations/execute/${ticketId}?event_type=${encodeURIComponent(eventType)}`, {});
+    return res;
+  },
+
+  /**
+   * Fetch execution logs for automations
+   */
+  async getAutomationLogs(ruleId = null, ticketId = null, limit = 50) {
+    const params = [];
+    if (ruleId) params.push(`rule_id=${encodeURIComponent(ruleId)}`);
+    if (ticketId) params.push(`ticket_id=${encodeURIComponent(ticketId)}`);
+    if (limit) params.push(`limit=${encodeURIComponent(limit)}`);
+    const query = params.length > 0 ? `?${params.join('&')}` : '';
+
+    const res = await api.get(`/api/v1/automations/logs${query}`);
+    if (res.success && Array.isArray(res.data)) {
+      return { success: true, data: res.data };
+    }
+    return {
+      success: false,
+      error: res.error || 'Failed to load automation logs',
+      data: [],
+      isOffline: res.isNetworkError,
+    };
+  },
+
+  /**
    * Invite an agent to workspace
    */
   async inviteAgent(email, role = 'agent') {

@@ -256,5 +256,20 @@ export const ticketService = {
       isOffline: res.isNetworkError,
     };
   },
+
+  /**
+   * Trigger automation rules execution for a ticket event
+   */
+  async triggerAutomations(ticketId, eventType = 'ticket_created', token = null) {
+    const res = await api.post(`/api/v1/automations/execute/${ticketId}?event_type=${encodeURIComponent(eventType)}`, {}, { token });
+    if (res.success && res.data) {
+      return { success: true, data: res.data };
+    }
+    return {
+      success: false,
+      error: res.error || `Failed to execute automations for ticket ${ticketId}`,
+      isOffline: res.isNetworkError,
+    };
+  },
 };
 

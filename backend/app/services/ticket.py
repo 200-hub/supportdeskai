@@ -104,6 +104,22 @@ async def create_ticket(
             await auto_assign_ticket(db, ticket.id, tenant_id)
     except Exception:
         pass
+
+    # Trigger automations for 'ticket_created' event if active rules exist
+    try:
+        from app.models.automation import AutomationRule
+        from app.services.automation import execute_automations_for_event
+        auto_check = await db.execute(
+            select(AutomationRule.id).where(
+                AutomationRule.tenant_id == tenant_id,
+                AutomationRule.trigger_event == "ticket_created",
+                AutomationRule.is_active.is_(True),
+            ).limit(1)
+        )
+        if auto_check.scalar_one_or_none():
+            await execute_automations_for_event(db, tenant_id, ticket.id, "ticket_created")
+    except Exception:
+        pass
     query = (
         select(Ticket)
         .where(Ticket.id == ticket.id)
