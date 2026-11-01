@@ -241,5 +241,20 @@ export const ticketService = {
       isOffline: res.isNetworkError,
     };
   },
+
+  /**
+   * Apply a macro (canned response and batch actions) to a ticket
+   */
+  async applyMacro(ticketId, macroId, token = null) {
+    const res = await api.post(`/api/v1/macros/${macroId}/apply/${ticketId}`, {}, { token });
+    if (res.success && res.data) {
+      return { success: true, data: res.data };
+    }
+    return {
+      success: false,
+      error: res.error || `Failed to apply macro ${macroId} to ticket ${ticketId}`,
+      isOffline: res.isNetworkError,
+    };
+  },
 };
 

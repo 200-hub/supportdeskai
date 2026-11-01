@@ -98,18 +98,36 @@ class RoutingAssignResponse(BaseModel):
 
 
 # ---------------- Macro Schemas ----------------
+VALID_MACRO_ACTIONS = {
+    "response_text",
+    "internal_note",
+    "status",
+    "priority",
+    "tags",
+    "add_tags",
+    "assigned_to_id",
+}
+
+
 class MacroBase(BaseModel):
     title: str = Field(..., min_length=2, max_length=100)
     description: Optional[str] = None
-    actions: Dict[str, Any] = Field(..., description="Action payload (response_text, status, priority)")
+    actions: Dict[str, Any] = Field(..., description="Action payload (response_text, internal_note, status, priority, tags, assigned_to_id)")
     is_active: bool = True
 
 
 class MacroCreate(BaseModel):
     title: str = Field(..., min_length=2, max_length=100)
     description: Optional[str] = None
-    actions: Dict[str, Any]
+    actions: Dict[str, Any] = Field(default_factory=dict)
     is_active: bool = True
+
+
+class MacroUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=2, max_length=100)
+    description: Optional[str] = None
+    actions: Optional[Dict[str, Any]] = None
+    is_active: Optional[bool] = None
 
 
 class MacroResponse(BaseModel):
@@ -123,6 +141,14 @@ class MacroResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MacroApplyResponse(BaseModel):
+    success: bool
+    ticket_id: str
+    macro_id: str
+    macro_title: str
+    applied_actions: List[str]
 
 
 # ---------------- Automation Schemas ----------------

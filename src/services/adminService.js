@@ -164,6 +164,54 @@ export const adminService = {
   },
 
   /**
+   * Fetch workspace macros
+   */
+  async getMacros(includeInactive = true) {
+    const res = await api.get(`/api/v1/macros/?include_inactive=${includeInactive}`);
+    if (res.success && Array.isArray(res.data)) {
+      return { success: true, data: res.data };
+    }
+    return {
+      success: false,
+      error: res.error || 'Failed to load macros',
+      data: [],
+      isOffline: res.isNetworkError,
+    };
+  },
+
+  /**
+   * Retrieve a single macro by ID
+   */
+  async getMacro(macroId) {
+    const res = await api.get(`/api/v1/macros/${macroId}`);
+    return res;
+  },
+
+  /**
+   * Create a new macro
+   */
+  async createMacro(macroData) {
+    const res = await api.post('/api/v1/macros/', macroData);
+    return res;
+  },
+
+  /**
+   * Update an existing macro by ID
+   */
+  async updateMacro(macroId, macroData) {
+    const res = await api.patch(`/api/v1/macros/${macroId}`, macroData);
+    return res;
+  },
+
+  /**
+   * Delete a macro by ID
+   */
+  async deleteMacro(macroId) {
+    const res = await api.delete(`/api/v1/macros/${macroId}`);
+    return res;
+  },
+
+  /**
    * Invite an agent to workspace
    */
   async inviteAgent(email, role = 'agent') {
