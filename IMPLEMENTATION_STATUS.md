@@ -63,6 +63,11 @@ All 10 in-scope modules audited for cross-tenant data access, IDOR vulnerabiliti
 | **Unvalidated SLA Targets & Priority Input** | `app/services/sla.py`, `app/schemas/workflow.py` | Target resolution time could be set shorter than first response time; invalid priorities were accepted without validation. | Enforced `resolution_time_minutes >= first_response_time_minutes` and validated priority against `(urgent, high, medium, low)`, raising 422 on invalid targets. |
 | **Customer IDOR in SLA Evaluation** | `app/api/v1/endpoints/sla.py` | `POST /evaluate/{ticket_id}` did not verify customer ownership; any authenticated customer could evaluate other customers' tickets. | Added `ticket_service.get_ticket()` verification ensuring customers can only evaluate their own tickets (403 on other customer's ticket; 404 cross-tenant). |
 | **Static Ticket SLA Targets & Missing Lifecycle Integration** | `app/services/ticket.py`, `app/services/sla.py` | Tickets had hardcoded `"2h"` SLA remaining regardless of priority; ticket priority and status updates did not update SLA state. | Integrated `get_initial_sla_for_priority()` into ticket creation and priority updates; automatic timer pause on `pending`, freeze on `resolved`, and resumption on `open`. |
+| **Missing RBAC on Routing Rule Management** | `app/api/v1/endpoints/routing.py` | `POST /rules`, `PATCH /rules/{id}`, `DELETE /rules/{id}`, `PATCH /active-strategy`, and `POST /assign/{id}` lacked role checks; any authenticated customer could alter routing rules or trigger manual assignments. | Enforced `require_roles(UserRole.ADMIN, UserRole.AGENT)` across all routing mutation endpoints; customer users receive 403 Forbidden. |
+| **Missing Single Rule Retrieval & Deletion** | `app/api/v1/endpoints/routing.py`, `app/services/routing.py` | `GET /rules/{id}` and `DELETE /rules/{id}` endpoints were absent, preventing inspection or removal of individual routing rules. | Added `get_routing_rule` and `delete_routing_rule` with strict tenant isolation (`RoutingRule.tenant_id == tenant_id`). |
+| **Unvalidated Routing Strategy & Cross-Tenant Team FK** | `app/services/routing.py`, `app/schemas/workflow.py` | Arbitrary strategy strings were accepted; `target_team_id` was saved without validating whether the team belonged to the tenant. | Enforced `VALID_ROUTING_STRATEGIES` validation (422) and tenant ownership verification on `target_team_id` (404 on cross-tenant teams). |
+| **Unordered Channel Matching in Routing Engine** | `app/services/routing.py` | Channel routing rule evaluation did not prioritize channel-specific rules over generic catch-all rules (`channel is None`). | Evaluates channel-specific rules first (`rule.channel == ticket.channel`), falling back to catch-all rules only when no specific channel rule matches. |
+| **Static Round-Robin Rotation & Agent Fallback** | `app/services/routing.py` | Round-robin was static and always selected the first agent in the list; assignment failed when no agents were in the targeted team. | Implemented genuine round-robin via latest assigned ticket timestamps (`func.max(Ticket.created_at)`); added safe fallback to tenant agents or unassigned with informative response. |
 
 ### Verified Correct (No Change Needed)
 
@@ -270,9 +275,9 @@ Inbound email and WhatsApp webhook authenticity checks, WhatsApp GET hub challen
   - `POST /api/v1/tickets/{id}/merge/{target_id}`
   - `POST /api/v1/tickets/{id}/collision`, `GET /api/v1/tickets/{id}/collision`
 - **SLA:**
-  - `POST /api/v1/sla/policies`, `GET /api/v1/sla/policies`, `PATCH /api/v1/sla/policies/{id}`, `POST /api/v1/sla/evaluate/{ticket_id}`
+  - `POST /api/v1/sla/policies`, `GET /api/v1/sla/policies`, `GET /api/v1/sla/policies/{id}`, `PATCH /api/v1/sla/policies/{id}`, `DELETE /api/v1/sla/policies/{id}`, `POST /api/v1/sla/evaluate/{ticket_id}`
 - **Routing:**
-  - `POST /api/v1/routing/rules`, `GET /api/v1/routing/rules`, `PATCH /api/v1/routing/active-strategy`, `POST /api/v1/routing/assign/{ticket_id}`
+  - `POST /api/v1/routing/rules`, `GET /api/v1/routing/rules`, `GET /api/v1/routing/rules/{id}`, `PATCH /api/v1/routing/rules/{id}`, `DELETE /api/v1/routing/rules/{id}`, `PATCH /api/v1/routing/active-strategy`, `POST /api/v1/routing/assign/{ticket_id}`
 - **Macros:**
   - `POST /api/v1/macros/`, `GET /api/v1/macros/`, `POST /api/v1/macros/{id}/apply/{ticket_id}`
 - **Automations:**
