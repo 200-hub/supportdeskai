@@ -37,27 +37,27 @@ def validate_automation_rule(
         clean_name = name.strip()
         if len(clean_name) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Rule name must be at least 2 characters",
             )
 
     if trigger_event is not None and trigger_event not in VALID_TRIGGERS:
         supported = ", ".join(sorted(VALID_TRIGGERS))
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Invalid trigger_event '{trigger_event}'. Supported triggers: {supported}",
         )
 
     if conditions is not None:
         if not isinstance(conditions, list):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Conditions must be a list",
             )
         for cond in conditions:
             if not isinstance(cond, dict):
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail="Each condition must be an object",
                 )
             field = cond.get("field")
@@ -65,64 +65,64 @@ def validate_automation_rule(
             if not field or field not in VALID_CONDITION_FIELDS:
                 supported_fields = ", ".join(sorted(VALID_CONDITION_FIELDS))
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Unsupported condition field '{field}'. Supported fields: {supported_fields}",
                 )
             if op not in VALID_CONDITION_OPS:
                 supported_ops = ", ".join(sorted(VALID_CONDITION_OPS))
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Unsupported condition operator '{op}'. Supported operators: {supported_ops}",
                 )
 
     if actions is not None:
         if not isinstance(actions, list):
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Actions must be a list",
             )
         for act in actions:
             if not isinstance(act, dict):
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail="Each action must be an object",
                 )
             action_type = act.get("action")
             if not action_type or action_type not in VALID_AUTOMATION_ACTIONS:
                 supported_actions = ", ".join(sorted(VALID_AUTOMATION_ACTIONS))
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Unsupported action '{action_type}'. Supported actions: {supported_actions}",
                 )
             value = act.get("value")
             if action_type == "set_status":
                 if str(value).lower() not in [s.value for s in TicketStatus]:
                     raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                         detail=f"Invalid status '{value}'. Must be one of: {', '.join(s.value for s in TicketStatus)}",
                     )
             elif action_type == "set_priority":
                 if str(value).lower() not in [p.value for p in TicketPriority]:
                     raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                         detail=f"Invalid priority '{value}'. Must be one of: {', '.join(p.value for p in TicketPriority)}",
                     )
             elif action_type in ("add_tag", "remove_tag"):
                 if not (isinstance(value, str) or (isinstance(value, list) and all(isinstance(x, str) for x in value))):
                     raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                         detail=f"Action '{action_type}' value must be a string tag or list of string tags",
                     )
             elif action_type in ("assign_agent", "assign_team", "add_internal_note"):
                 if not isinstance(value, str) or not value.strip():
                     raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                         detail=f"Action '{action_type}' value must be a non-empty string",
                     )
             elif action_type == "set_sla_paused":
                 if not isinstance(value, bool):
                     raise HTTPException(
-                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                         detail="Action 'set_sla_paused' value must be a boolean",
                     )
 

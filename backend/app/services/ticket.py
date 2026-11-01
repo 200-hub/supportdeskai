@@ -33,13 +33,13 @@ async def create_ticket(
     stripped_subject = ticket_in.subject.strip()
     if len(stripped_subject) < 2:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Ticket subject must be at least 2 characters",
         )
     stripped_desc = ticket_in.description.strip()
     if len(stripped_desc) < 2:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Ticket description must be at least 2 characters",
         )
 
@@ -338,7 +338,7 @@ async def update_ticket(
         stripped_sub = update_data.subject.strip()
         if len(stripped_sub) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Ticket subject must be at least 2 characters",
             )
         ticket.subject = stripped_sub
@@ -347,7 +347,7 @@ async def update_ticket(
         stripped_desc = update_data.description.strip()
         if len(stripped_desc) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Ticket description must be at least 2 characters",
             )
         ticket.description = stripped_desc
@@ -362,7 +362,7 @@ async def update_ticket(
                 raise ValueError()
         except Exception:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="tags_json must be a valid JSON array string",
             )
         ticket.tags_json = update_data.tags_json

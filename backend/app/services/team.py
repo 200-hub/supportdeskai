@@ -69,7 +69,7 @@ async def update_team(
         stripped_name = team_in.name.strip()
         if len(stripped_name) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Team name must be at least 2 characters",
             )
         team.name = stripped_name

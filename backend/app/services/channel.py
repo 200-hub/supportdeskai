@@ -72,7 +72,7 @@ def merge_channel_config(existing_json_str: Optional[str], new_json_str: Optiona
             raise ValueError()
     except Exception:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Channel config_json must be a valid JSON object string",
         )
 
@@ -108,7 +108,7 @@ async def create_channel(
     stripped_name = channel_in.name.strip()
     if len(stripped_name) < 2:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Channel name must be at least 2 characters",
         )
 
@@ -119,7 +119,7 @@ async def create_channel(
             raise ValueError()
     except Exception:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Channel config_json must be a valid JSON object string",
         )
 
@@ -188,7 +188,7 @@ async def update_channel(
         stripped_name = channel_in.name.strip()
         if len(stripped_name) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Channel name must be at least 2 characters",
             )
         channel.name = stripped_name

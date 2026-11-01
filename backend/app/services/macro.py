@@ -47,7 +47,7 @@ def validate_macro_actions(actions: Dict[str, Any]) -> None:
     """Validate action keys and values for macros."""
     if not isinstance(actions, dict):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Actions must be a dictionary",
         )
     if not actions:
@@ -58,39 +58,39 @@ def validate_macro_actions(actions: Dict[str, Any]) -> None:
         if key not in VALID_MACRO_ACTIONS:
             supported = ", ".join(sorted(VALID_MACRO_ACTIONS))
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Unsupported macro action '{key}'. Supported actions are: {supported}",
             )
         if key in ("response_text", "internal_note"):
             if not isinstance(val, str) or not val.strip():
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Action '{key}' must be a non-empty string",
                 )
         elif key == "status":
             valid_statuses = [s.value for s in TicketStatus]
             if not isinstance(val, str) or val.lower() not in valid_statuses:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Invalid status '{val}'. Must be one of: {', '.join(valid_statuses)}",
                 )
         elif key == "priority":
             valid_priorities = [p.value for p in TicketPriority]
             if not isinstance(val, str) or val.lower() not in valid_priorities:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Invalid priority '{val}'. Must be one of: {', '.join(valid_priorities)}",
                 )
         elif key in ("tags", "add_tags"):
             if not isinstance(val, list) or not all(isinstance(t, str) and t.strip() for t in val):
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Action '{key}' must be a list of non-empty strings",
                 )
         elif key == "assigned_to_id":
             if not isinstance(val, str) or not val.strip():
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail="Action 'assigned_to_id' must be a non-empty string user ID",
                 )
 
@@ -118,7 +118,7 @@ async def create_macro(
     title_clean = macro_in.title.strip() if macro_in.title else ""
     if len(title_clean) < 2:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Title must be at least 2 characters",
         )
     validate_macro_actions(macro_in.actions)
@@ -178,7 +178,7 @@ async def update_macro(
         clean_title = macro_in.title.strip()
         if len(clean_title) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Title must be at least 2 characters",
             )
         macro.title = clean_title

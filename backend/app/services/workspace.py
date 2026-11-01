@@ -254,7 +254,7 @@ async def update_workspace_user(
         stripped_name = user_update.name.strip()
         if len(stripped_name) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="User name must be at least 2 characters",
             )
         user.name = stripped_name

@@ -23,14 +23,14 @@ async def create_routing_rule(
     stripped_name = rule_in.name.strip()
     if len(stripped_name) < 2:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Routing rule name must be at least 2 characters",
         )
 
     clean_strategy = rule_in.strategy.lower().strip()
     if clean_strategy not in VALID_ROUTING_STRATEGIES:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Invalid routing strategy '{rule_in.strategy}'. Must be one of {list(VALID_ROUTING_STRATEGIES)}",
         )
 
@@ -96,7 +96,7 @@ async def update_routing_rule(
         stripped_name = rule_in.name.strip()
         if len(stripped_name) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Routing rule name must be at least 2 characters",
             )
         rule.name = stripped_name
@@ -105,7 +105,7 @@ async def update_routing_rule(
         clean_strategy = rule_in.strategy.lower().strip()
         if clean_strategy not in VALID_ROUTING_STRATEGIES:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Invalid routing strategy '{rule_in.strategy}'. Must be one of {list(VALID_ROUTING_STRATEGIES)}",
             )
         rule.strategy = clean_strategy
@@ -163,7 +163,7 @@ async def set_active_routing_strategy(
     clean_strat = strategy.lower().strip()
     if clean_strat not in VALID_ROUTING_STRATEGIES:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Invalid routing strategy '{strategy}'. Must be one of {list(VALID_ROUTING_STRATEGIES)}",
         )
     res = await db.execute(
@@ -220,7 +220,7 @@ async def auto_assign_ticket(
     clean_strategy = strategy.lower().strip() if strategy else None
     if clean_strategy and clean_strategy not in VALID_ROUTING_STRATEGIES:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Invalid routing strategy '{strategy}'. Must be one of {list(VALID_ROUTING_STRATEGIES)}",
         )
 
