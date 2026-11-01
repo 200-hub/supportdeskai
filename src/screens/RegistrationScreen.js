@@ -16,6 +16,7 @@ import { TYPOGRAPHY } from '../theme/typography';
 import { SPACING, RADIUS } from '../theme/spacing';
 import { AppTextInput } from '../components/common/AppTextInput';
 import { AppButton } from '../components/common/AppButton';
+import { authService } from '../services/authService';
 
 export const RegistrationScreen = ({
   onRegisterSuccess,
@@ -67,24 +68,45 @@ export const RegistrationScreen = ({
     setErrors({});
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-      Alert.alert(
-        'Account Created',
-        'Your SupportDesk AI customer account has been created successfully.',
-        [
-          {
-            text: 'Continue',
-            onPress: () =>
-              onRegisterSuccess({
-                name: fullName.trim(),
-                email: email.trim(),
-                role: 'customer',
-              }),
-          },
-        ]
-      );
-    }, 600);
+    authService
+      .register({
+        name: fullName.trim(),
+        email: email.trim(),
+        password: password,
+        role: 'customer',
+      })
+      .then((res) => {
+        setLoading(false);
+        if (res.success) {
+          Alert.alert(
+            'Account Created',
+            'Your SupportDesk AI customer account has been created successfully.',
+            [
+              {
+                text: 'Continue',
+                onPress: () =>
+                  onRegisterSuccess({
+                    name: res.user?.name || fullName.trim(),
+                    email: res.user?.email || email.trim(),
+                    role: res.user?.role || 'customer',
+                    user: res.user,
+                    token: res.token,
+                  }),
+              },
+            ]
+          );
+        } else {
+          Alert.alert('Registration Failed', res.error || 'Unable to register account');
+        }
+      })
+      .catch(() => {
+        setLoading(false);
+        onRegisterSuccess({
+          name: fullName.trim(),
+          email: email.trim(),
+          role: 'customer',
+        });
+      });
   };
 
   return (

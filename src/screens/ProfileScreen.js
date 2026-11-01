@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -38,6 +38,16 @@ export const ProfileScreen = ({
   const [editPhone, setEditPhone] = useState(user?.phone || '+1 (555) 234-5678');
   const [editCompany, setEditCompany] = useState(user?.company || 'Cyberdyne Systems Corp');
   const [editError, setEditError] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setEditName(user.name || '');
+      setEditEmail(user.email || '');
+      setEditPhone(user.phone || '');
+      setEditCompany(user.company || '');
+      setEditError('');
+    }
+  }, [user]);
 
   const handleSaveProfile = () => {
     if (!editName.trim() || !editEmail.trim()) {
