@@ -54,6 +54,7 @@ class SLAEvaluationResponse(BaseModel):
 
 # ---------------- Routing Schemas ----------------
 VALID_ROUTING_STRATEGIES = ("round_robin", "least_loaded", "skills_based")
+VALID_ROUTING_CHANNELS = ("email", "whatsapp", "chat", "web")
 
 
 class RoutingRuleBase(BaseModel):
@@ -63,7 +64,7 @@ class RoutingRuleBase(BaseModel):
     required_skill: Optional[str] = None
     channel: Optional[str] = None
     is_active: bool = True
-    priority_order: int = 1
+    priority_order: int = Field(default=1, ge=1)
 
 
 class RoutingRuleCreate(RoutingRuleBase):
@@ -77,7 +78,7 @@ class RoutingRuleUpdate(BaseModel):
     required_skill: Optional[str] = None
     channel: Optional[str] = None
     is_active: Optional[bool] = None
-    priority_order: Optional[int] = None
+    priority_order: Optional[int] = Field(None, ge=1)
 
 
 class RoutingRuleResponse(RoutingRuleBase):

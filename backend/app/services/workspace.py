@@ -1,3 +1,4 @@
+import json
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
@@ -196,6 +197,20 @@ async def create_workspace_user(
             )
 
     initials = "".join(part[0].upper() for part in user_in.name.strip().split()[:2]) or "SD"
+    clean_skills = "[]"
+    if user_in.skills_json:
+        try:
+            parsed = json.loads(user_in.skills_json) if isinstance(user_in.skills_json, str) else user_in.skills_json
+            if isinstance(parsed, list):
+                clean_skills = json.dumps([str(s).strip() for s in parsed if str(s).strip()])
+            else:
+                raise ValueError
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="skills_json must be a valid JSON array of skill strings",
+            )
+
     user = User(
         tenant_id=tenant_id,
         email=clean_email,
@@ -206,6 +221,7 @@ async def create_workspace_user(
         company=user_in.company,
         team_id=user_in.team_id,
         avatar_initials=initials,
+        skills_json=clean_skills,
         is_active=True,
     )
     db.add(user)
@@ -278,6 +294,19 @@ async def update_workspace_user(
                     detail="Specified team not found in this workspace",
                 )
             user.team_id = user_update.team_id
+
+    if user_update.skills_json is not None:
+        try:
+            parsed = json.loads(user_update.skills_json) if isinstance(user_update.skills_json, str) else user_update.skills_json
+            if isinstance(parsed, list):
+                user.skills_json = json.dumps([str(s).strip() for s in parsed if str(s).strip()])
+            else:
+                raise ValueError
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="skills_json must be a valid JSON array of skill strings",
+            )
 
     await db.commit()
     await db.refresh(user)

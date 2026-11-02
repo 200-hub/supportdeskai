@@ -35,6 +35,7 @@ class UserResponse(UserBase):
     avatar_initials: str
     is_active: bool
     team_id: Optional[str] = None
+    skills_json: Optional[str] = "[]"
     created_at: datetime
     updated_at: datetime
 
@@ -48,6 +49,7 @@ class UserUpdate(BaseModel):
     role: Optional[UserRole] = None
     is_active: Optional[bool] = None
     team_id: Optional[str] = None
+    skills_json: Optional[str] = None
 
 
 class WorkspaceUserCreate(BaseModel):
@@ -58,6 +60,7 @@ class WorkspaceUserCreate(BaseModel):
     phone: Optional[str] = None
     company: Optional[str] = None
     team_id: Optional[str] = None
+    skills_json: Optional[str] = "[]"
 
 
 class TokenResponse(BaseModel):

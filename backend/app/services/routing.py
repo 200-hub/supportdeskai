@@ -5,14 +5,41 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.routing import RoutingRule
-from app.models.ticket import Ticket, TicketTimeline
+from app.models.team import Team
+from app.models.ticket import Ticket, TicketChannel, TicketTimeline
 from app.models.user import User, UserRole
 from app.schemas.workflow import (
     RoutingAssignResponse,
     RoutingRuleCreate,
     RoutingRuleUpdate,
+    VALID_ROUTING_CHANNELS,
     VALID_ROUTING_STRATEGIES,
 )
+
+
+def _validate_routing_strategy(strategy: str) -> str:
+    clean = strategy.lower().strip().replace("-", "_")
+    if clean not in VALID_ROUTING_STRATEGIES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid routing strategy '{strategy}'. Must be one of {list(VALID_ROUTING_STRATEGIES)}",
+        )
+    return clean
+
+
+def _validate_routing_channel(channel: Optional[str]) -> Optional[str]:
+    if channel is None:
+        return None
+    clean = channel.lower().strip()
+    if not clean:
+        return None
+    valid_channels = {c.value for c in TicketChannel}
+    if clean not in valid_channels:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid channel '{channel}'. Must be one of {sorted(valid_channels)}",
+        )
+    return clean
 
 
 async def create_routing_rule(
@@ -27,34 +54,40 @@ async def create_routing_rule(
             detail="Routing rule name must be at least 2 characters",
         )
 
-    clean_strategy = rule_in.strategy.lower().strip()
-    if clean_strategy not in VALID_ROUTING_STRATEGIES:
+    clean_strategy = _validate_routing_strategy(rule_in.strategy)
+    clean_channel = _validate_routing_channel(rule_in.channel)
+
+    if rule_in.priority_order is not None and rule_in.priority_order < 1:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid routing strategy '{rule_in.strategy}'. Must be one of {list(VALID_ROUTING_STRATEGIES)}",
+            detail="Routing rule priority order must be at least 1",
         )
 
+    target_team = None
     if rule_in.target_team_id:
-        from app.models.team import Team
-        team_res = await db.execute(
-            select(Team).where(
-                Team.id == rule_in.target_team_id,
-                Team.tenant_id == tenant_id,
+        target_team = rule_in.target_team_id.strip() or None
+        if target_team:
+            team_res = await db.execute(
+                select(Team).where(
+                    Team.id == target_team,
+                    Team.tenant_id == tenant_id,
+                )
             )
-        )
-        if not team_res.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Target team '{rule_in.target_team_id}' not found in this workspace",
-            )
+            if not team_res.scalar_one_or_none():
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Target team '{target_team}' not found in this workspace",
+                )
+
+    clean_skill = rule_in.required_skill.strip() if rule_in.required_skill and rule_in.required_skill.strip() else None
 
     rule = RoutingRule(
         tenant_id=tenant_id,
         name=stripped_name,
         strategy=clean_strategy,
-        target_team_id=rule_in.target_team_id,
-        required_skill=rule_in.required_skill,
-        channel=rule_in.channel,
+        target_team_id=target_team,
+        required_skill=clean_skill,
+        channel=clean_channel,
         is_active=rule_in.is_active,
         priority_order=rule_in.priority_order,
     )
@@ -102,18 +135,26 @@ async def update_routing_rule(
         rule.name = stripped_name
 
     if rule_in.strategy is not None:
-        clean_strategy = rule_in.strategy.lower().strip()
-        if clean_strategy not in VALID_ROUTING_STRATEGIES:
+        rule.strategy = _validate_routing_strategy(rule_in.strategy)
+
+    if rule_in.priority_order is not None:
+        if rule_in.priority_order < 1:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid routing strategy '{rule_in.strategy}'. Must be one of {list(VALID_ROUTING_STRATEGIES)}",
+                detail="Routing rule priority order must be at least 1",
             )
-        rule.strategy = clean_strategy
+        rule.priority_order = rule_in.priority_order
+
+    if rule_in.channel is not None:
+        rule.channel = _validate_routing_channel(rule_in.channel)
+
+    if rule_in.required_skill is not None:
+        clean_skill = rule_in.required_skill.strip()
+        rule.required_skill = clean_skill if clean_skill else None
 
     if rule_in.target_team_id is not None:
         target_team = rule_in.target_team_id.strip() if rule_in.target_team_id else None
         if target_team:
-            from app.models.team import Team
             team_res = await db.execute(
                 select(Team).where(
                     Team.id == target_team,
@@ -129,14 +170,8 @@ async def update_routing_rule(
         else:
             rule.target_team_id = None
 
-    if rule_in.required_skill is not None:
-        rule.required_skill = rule_in.required_skill
-    if rule_in.channel is not None:
-        rule.channel = rule_in.channel
     if rule_in.is_active is not None:
         rule.is_active = rule_in.is_active
-    if rule_in.priority_order is not None:
-        rule.priority_order = rule_in.priority_order
 
     await db.commit()
     await db.refresh(rule)
@@ -160,16 +195,11 @@ async def set_active_routing_strategy(
     strategy: str,
     name: Optional[str] = None,
 ) -> RoutingRule:
-    clean_strat = strategy.lower().strip()
-    if clean_strat not in VALID_ROUTING_STRATEGIES:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid routing strategy '{strategy}'. Must be one of {list(VALID_ROUTING_STRATEGIES)}",
-        )
+    clean_strat = _validate_routing_strategy(strategy)
     res = await db.execute(
         select(RoutingRule)
         .where(RoutingRule.tenant_id == tenant_id)
-        .order_by(RoutingRule.priority_order.asc())
+        .order_by(RoutingRule.priority_order.asc(), RoutingRule.created_at.asc())
     )
     rule = res.scalars().first()
     if rule:
@@ -201,7 +231,7 @@ async def list_routing_rules(
     result = await db.execute(
         select(RoutingRule)
         .where(RoutingRule.tenant_id == tenant_id)
-        .order_by(RoutingRule.priority_order.asc())
+        .order_by(RoutingRule.priority_order.asc(), RoutingRule.created_at.asc())
     )
     return list(result.scalars().all())
 
@@ -217,25 +247,22 @@ async def auto_assign_ticket(
     if not ticket:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
 
-    clean_strategy = strategy.lower().strip() if strategy else None
-    if clean_strategy and clean_strategy not in VALID_ROUTING_STRATEGIES:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Invalid routing strategy '{strategy}'. Must be one of {list(VALID_ROUTING_STRATEGIES)}",
-        )
+    clean_strategy = _validate_routing_strategy(strategy) if strategy else None
 
     # Find matching active rule if strategy not specified
     used_strategy = clean_strategy or "round_robin"
     target_team = ticket.team_id
+    required_skill = None
 
     if not clean_strategy:
         res_rules = await db.execute(
             select(RoutingRule).where(
                 RoutingRule.tenant_id == tenant_id,
-                RoutingRule.is_active.is_(True)
-            ).order_by(RoutingRule.priority_order.asc())
+                RoutingRule.is_active.is_(True),
+            ).order_by(RoutingRule.priority_order.asc(), RoutingRule.created_at.asc())
         )
-        active_rules = res_rules.scalars().all()
+        active_rules = list(res_rules.scalars().all())
+
         # Specific channel rule takes precedence over generic catch-all
         ticket_channel_str = ticket.channel.value if hasattr(ticket.channel, "value") else str(ticket.channel)
         matched_rule = None
@@ -252,6 +279,15 @@ async def auto_assign_ticket(
         if matched_rule:
             used_strategy = matched_rule.strategy
             target_team = matched_rule.target_team_id or target_team
+            required_skill = matched_rule.required_skill
+
+    # Validate target_team against workspace to prevent cross-tenant or deleted team references
+    if target_team:
+        team_check = await db.execute(
+            select(Team).where(Team.id == target_team, Team.tenant_id == tenant_id)
+        )
+        if not team_check.scalar_one_or_none():
+            target_team = None  # Safely invalidate if team was deleted or belongs to another tenant
 
     # Query eligible agents strictly within this tenant
     query_agents = select(User).where(
@@ -263,14 +299,14 @@ async def auto_assign_ticket(
         # Check if team has active agents
         team_agents_query = query_agents.where(User.team_id == target_team)
         res_team_agents = await db.execute(team_agents_query)
-        agents = res_team_agents.scalars().all()
+        agents = list(res_team_agents.scalars().all())
         if not agents:
             # Fallback to workspace agents if team has no members assigned
             res_all_agents = await db.execute(query_agents)
-            agents = res_all_agents.scalars().all()
+            agents = list(res_all_agents.scalars().all())
     else:
         res_agents = await db.execute(query_agents)
-        agents = res_agents.scalars().all()
+        agents = list(res_agents.scalars().all())
 
     if not agents:
         return RoutingAssignResponse(
@@ -280,6 +316,24 @@ async def auto_assign_ticket(
             strategy_used=used_strategy,
             message="No eligible agents found in workspace or team",
         )
+
+    # Skills-based filtering
+    def _agent_has_skill(user: User, skill: str) -> bool:
+        if not user.skills_json:
+            return False
+        try:
+            skills = json.loads(user.skills_json)
+            if isinstance(skills, list):
+                return any(str(s).strip().lower() == skill.strip().lower() for s in skills)
+            return False
+        except Exception:
+            return False
+
+    if required_skill:
+        skilled_agents = [ag for ag in agents if _agent_has_skill(ag, required_skill)]
+        if skilled_agents:
+            agents = skilled_agents
+        # If no agents have the required skill, graceful fallback to existing agents list
 
     # Strategy: least_loaded
     if used_strategy == "least_loaded":
@@ -297,7 +351,7 @@ async def auto_assign_ticket(
         selected_agent = min(agents, key=lambda a: counts.get(a.id, 0))
 
     else:
-        # Strategy: round_robin
+        # Strategy: round_robin or skills_based rotation
         # Find agent whose most recently assigned ticket is oldest (least recently assigned)
         agent_last_assigned = {}
         for ag in agents:
@@ -332,4 +386,3 @@ async def auto_assign_ticket(
         strategy_used=used_strategy,
         message=f"Successfully assigned to {selected_agent.name}",
     )
-

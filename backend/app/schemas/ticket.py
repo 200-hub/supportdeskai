@@ -61,6 +61,7 @@ class TicketUpdate(BaseModel):
     sla_paused: Optional[bool] = None
     sla_remaining: Optional[str] = None
     sla_status: Optional[str] = None
+    auto_assign: Optional[bool] = None
 
 
 class TicketResponse(TicketBase):

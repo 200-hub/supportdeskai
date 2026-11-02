@@ -50,6 +50,7 @@ export const AdminSettingsScreen = ({
 
   // Routing and SLA states
   const [assignmentRule, setAssignmentRule] = useState('Least-Load & Skill');
+  const [routingRules, setRoutingRules] = useState([]);
   const [slaPolicies, setSlaPolicies] = useState([]);
   const [teamMembers, setTeamMembers] = useState(AGENT_TEAM);
   const [channels, setChannels] = useState([]);
@@ -109,10 +110,13 @@ export const AdminSettingsScreen = ({
         setSlaPolicies(slaRes.data);
       }
 
-      if (routingRes.success && Array.isArray(routingRes.data) && routingRes.data.length > 0) {
-        const activeRule = routingRes.data.find((r) => r.is_active) || routingRes.data[0];
-        if (activeRule && REVERSE_STRATEGY_MAP[activeRule.strategy]) {
-          setAssignmentRule(REVERSE_STRATEGY_MAP[activeRule.strategy]);
+      if (routingRes.success && Array.isArray(routingRes.data)) {
+        setRoutingRules(routingRes.data);
+        if (routingRes.data.length > 0) {
+          const activeRule = routingRes.data.find((r) => r.is_active) || routingRes.data[0];
+          if (activeRule && REVERSE_STRATEGY_MAP[activeRule.strategy]) {
+            setAssignmentRule(REVERSE_STRATEGY_MAP[activeRule.strategy]);
+          }
         }
       }
 
@@ -180,6 +184,20 @@ export const AdminSettingsScreen = ({
       Alert.alert('Routing Error', err.message || 'Failed to persist strategy.');
     } finally {
       setIsSavingStrategy(false);
+    }
+  };
+
+  // Toggle routing rule activation
+  const handleToggleRoutingRule = async (rule) => {
+    try {
+      const res = await adminService.updateRoutingRule(rule.id, { is_active: !rule.is_active });
+      if (res.success && res.data) {
+        setRoutingRules((prev) => prev.map((r) => (r.id === rule.id ? res.data : r)));
+      } else {
+        Alert.alert('Update Failed', res.error || 'Could not toggle routing rule.');
+      }
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Failed to update rule.');
     }
   };
 
@@ -494,6 +512,50 @@ export const AdminSettingsScreen = ({
               </TouchableOpacity>
             );
           })}
+
+          {routingRules.length > 0 && (
+            <View style={{ marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#334155' }}>
+              <Text style={[styles.sectionSubtitle, { marginBottom: 8, fontWeight: '600', color: '#F8FAFC' }]}>
+                Configured Rules ({routingRules.length})
+              </Text>
+              {routingRules.map((r) => (
+                <View
+                  key={r.id}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingVertical: 8,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#1E293B',
+                  }}
+                >
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#F8FAFC' }}>{r.name}</Text>
+                    <Text style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
+                      Priority {r.priority_order} • Channel: {r.channel ? r.channel.toUpperCase() : 'ALL'} • {r.strategy}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => handleToggleRoutingRule(r)}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                      borderRadius: 12,
+                      backgroundColor: r.is_active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(100, 116, 139, 0.2)',
+                      borderWidth: 1,
+                      borderColor: r.is_active ? '#10B981' : '#64748B',
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: r.is_active ? '#10B981' : '#94A3B8' }}>
+                      {r.is_active ? 'Active' : 'Inactive'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* SLA Configuration Entry */}

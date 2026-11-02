@@ -278,7 +278,7 @@ async def update_ticket(
         _, new_rem = await get_initial_sla_for_priority(db, tenant_id, update_data.priority)
         ticket.sla_remaining = new_rem
 
-    if update_data.assigned_to_id is not None:
+    if "assigned_to_id" in update_data.model_fields_set:
         target_agent_id = update_data.assigned_to_id.strip() if update_data.assigned_to_id else None
         if target_agent_id:
             assignee_res = await db.execute(
@@ -298,7 +298,7 @@ async def update_ticket(
             ticket.assigned_to_id = None
         timeline_notes.append("Ticket re-assigned")
 
-    if update_data.team_id is not None:
+    if "team_id" in update_data.model_fields_set:
         target_team_id = update_data.team_id.strip() if update_data.team_id else None
         if target_team_id:
             team_res = await db.execute(
@@ -377,6 +377,10 @@ async def update_ticket(
         db.add(timeline_entry)
 
     await db.commit()
+
+    if update_data.auto_assign is True:
+        from app.services.routing import auto_assign_ticket
+        await auto_assign_ticket(db, ticket.id, tenant_id)
     query = (
         select(Ticket)
         .where(Ticket.id == ticket.id)

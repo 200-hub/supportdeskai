@@ -162,15 +162,10 @@ export const AIChatScreen = ({
   return (
     <KeyboardAvoidingView
       style={styles.container}
-<<<<<<< HEAD
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
-=======
       behavior="padding"
       // KAV measures itself relative to its parent, not the screen; App's
       // StatusBarSpacer pushes it down by the top inset, which varies per device.
       keyboardVerticalOffset={topInset}
->>>>>>> origin/Nilambar
     >
       <View style={styles.innerContainer}>
         {/* Top Header */}
