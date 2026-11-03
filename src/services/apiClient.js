@@ -67,7 +67,10 @@ export async function apiRequest(endpoint, options = {}) {
         onUnauthorizedHandler &&
         !endpoint.includes('/auth/login') &&
         !endpoint.includes('/auth/register') &&
-        !endpoint.includes('/auth/refresh')
+        !endpoint.includes('/auth/refresh') &&
+        // restoreSession handles /me itself; a 401 on logout must not revive the session
+        !endpoint.includes('/auth/me') &&
+        !endpoint.includes('/auth/logout')
       ) {
         try {
           onUnauthorizedHandler();

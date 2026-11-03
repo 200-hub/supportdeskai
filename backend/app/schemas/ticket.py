@@ -7,7 +7,7 @@ from app.schemas.user import UserResponse
 
 class TicketMessageBase(BaseModel):
     content: str = Field(..., min_length=1, max_length=10000)
-    sender_type: Optional[MessageSenderType] = MessageSenderType.CUSTOMER
+    sender_type: Optional[MessageSenderType] = None
     sender_name: Optional[str] = "Anonymous"
 
 

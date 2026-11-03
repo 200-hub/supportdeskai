@@ -49,9 +49,9 @@ export const InboxScreen = ({ tickets, onSelectTicket, onNewTicket }) => {
       // Search match
       if (searchQuery.trim() !== '') {
         const query = searchQuery.toLowerCase();
-        const matchesSubject = ticket.subject.toLowerCase().includes(query);
-        const matchesCustomer = ticket.customer.name.toLowerCase().includes(query);
-        const matchesId = ticket.id.toLowerCase().includes(query);
+        const matchesSubject = (ticket.subject || '').toLowerCase().includes(query);
+        const matchesCustomer = (ticket.customer?.name || '').toLowerCase().includes(query);
+        const matchesId = String(ticket.id || '').toLowerCase().includes(query);
         if (!matchesSubject && !matchesCustomer && !matchesId) {
           return false;
         }

@@ -32,6 +32,7 @@ def _reset_all_rate_limit_buckets():
 os.environ["ENVIRONMENT"] = "testing"
 os.environ["DEBUG"] = "False"
 os.environ["AI_PROVIDER"] = "mock"
+os.environ["ALLOW_STAFF_SELF_REGISTRATION"] = "True"  # fixtures register staff directly
 
 
 @pytest.fixture(autouse=True)

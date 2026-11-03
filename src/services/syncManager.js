@@ -68,6 +68,10 @@ export const syncManager = {
         await offlineStorage.cacheTickets(reconciled);
         return { success: true, online: true, ticket: serverTicket };
       }
+      // Server rejected it (4xx/5xx): retrying later won't help, so don't queue.
+      if (!res.isNetworkError) {
+        return { success: false, online: true, ticket: optimisticTicket, error: res.error };
+      }
     }
 
     // Offline: Enqueue for sync when connection restores
@@ -114,6 +118,9 @@ export const syncManager = {
         optimisticMessage.id = res.data.id;
         return { success: true, online: true, message: optimisticMessage };
       }
+      if (!res.isNetworkError) {
+        return { success: false, online: true, message: optimisticMessage, error: res.error };
+      }
     }
 
     // Offline: queue mutation
@@ -158,6 +165,10 @@ export const syncManager = {
         if (res && res.success) {
           await offlineStorage.removeMutation(mutation.id);
           processedCount++;
+        } else if (res && !res.isNetworkError && res.status >= 400 && res.status < 500) {
+          // Permanently rejected (e.g. 404 ticket, 403): drop instead of retrying forever.
+          console.warn(`[SyncManager] Dropping rejected mutation ${mutation.id}: ${res.error}`);
+          await offlineStorage.removeMutation(mutation.id);
         }
       } catch (err) {
         console.warn(`[SyncManager] Error processing mutation ${mutation.id}:`, err);

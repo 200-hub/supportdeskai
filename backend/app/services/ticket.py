@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
@@ -20,6 +21,8 @@ from app.models.ticket import (
 from app.models.user import User, UserRole
 from app.schemas.ticket import TicketCreate, TicketUpdate, TicketMessageCreate
 
+
+logger = logging.getLogger(__name__)
 
 async def create_ticket(
     db: AsyncSession,
@@ -46,7 +49,7 @@ async def create_ticket(
     customer_id = current_user.id if current_user else None
     sender_name = current_user.name if current_user else (ticket_in.customer_name or "Customer")
 
-    ticket_id = f"SD-{uuid.uuid4().hex[:4].upper()}"
+    ticket_id = f"SD-{uuid.uuid4().hex[:12].upper()}"
 
     priority = ticket_in.priority or TicketPriority.MEDIUM
     from app.services.sla import get_initial_sla_for_priority
@@ -103,7 +106,10 @@ async def create_ticket(
         if rule_check.scalar_one_or_none():
             await auto_assign_ticket(db, ticket.id, tenant_id)
     except Exception:
-        pass
+        # Ticket is already committed; drop the failed hook's partial work so
+        # the session stays usable (otherwise later queries raise PendingRollbackError).
+        logger.exception("Auto-assign failed for ticket %s", ticket.id)
+        await db.rollback()
 
     # Trigger automations for 'ticket_created' event if active rules exist
     try:
@@ -119,7 +125,8 @@ async def create_ticket(
         if auto_check.scalar_one_or_none():
             await execute_automations_for_event(db, tenant_id, ticket.id, "ticket_created")
     except Exception:
-        pass
+        logger.exception("ticket_created automations failed for ticket %s", ticket.id)
+        await db.rollback()
     query = (
         select(Ticket)
         .where(Ticket.id == ticket.id)
@@ -256,13 +263,8 @@ async def update_ticket(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Customers may only change status to 'closed'"
             )
-        if (
-            update_data.priority
-            or update_data.assigned_to_id
-            or update_data.team_id
-            or update_data.sla_paused
-            or update_data.tags_json
-        ):
+        # Allow-list: anything a customer sends beyond these is staff-only.
+        if update_data.model_fields_set - {"status", "subject", "description"}:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Customers cannot reassign, change priority, or modify internal fields of tickets"
@@ -424,16 +426,21 @@ async def add_ticket_message(
     """
     ticket = await get_ticket(db, ticket_id, tenant_id, current_user)
 
-    # Validate sender type
-    sender_type = message_in.sender_type or (
-        MessageSenderType.AGENT if current_user.role in [UserRole.AGENT, UserRole.ADMIN] else MessageSenderType.CUSTOMER
-    )
-
-    if sender_type == MessageSenderType.INTERNAL_NOTE and current_user.role == UserRole.CUSTOMER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Customers cannot post internal notes"
-        )
+    # Sender type is derived from the caller's role; clients may only pick
+    # note/assistant variants when they are staff.
+    requested = message_in.sender_type
+    if current_user.role in (UserRole.AGENT, UserRole.ADMIN):
+        if requested in (MessageSenderType.INTERNAL_NOTE, MessageSenderType.ASSISTANT):
+            sender_type = requested
+        else:
+            sender_type = MessageSenderType.AGENT
+    else:
+        if requested == MessageSenderType.INTERNAL_NOTE:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Customers cannot post internal notes"
+            )
+        sender_type = MessageSenderType.CUSTOMER
 
     msg = TicketMessage(
         ticket_id=ticket.id,

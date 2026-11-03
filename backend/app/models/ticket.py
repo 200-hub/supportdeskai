@@ -48,7 +48,7 @@ class Ticket(Base, TimestampMixin):
     id: Mapped[str] = mapped_column(
         String(36),
         primary_key=True,
-        default=lambda: f"SD-{uuid.uuid4().hex[:6].upper()}",
+        default=lambda: f"SD-{uuid.uuid4().hex[:12].upper()}",
         index=True
     )
     tenant_id: Mapped[str] = mapped_column(

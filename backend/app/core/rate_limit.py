@@ -69,7 +69,11 @@ def _client_key(request: Request) -> str:
     if trust_proxy:
         xff = request.headers.get("X-Forwarded-For")
         if xff:
-            return xff.split(",")[0].strip()
+            # Proxies append, so the left entries are client-controlled. Take the
+            # address added by our own proxy chain (TRUSTED_PROXY_HOPS from the right).
+            hops = [h.strip() for h in xff.split(",") if h.strip()]
+            if hops:
+                return hops[-min(max(settings.TRUSTED_PROXY_HOPS, 1), len(hops))]
         real_ip = request.headers.get("X-Real-IP")
         if real_ip:
             return real_ip.strip()

@@ -1,5 +1,6 @@
 // Offline Storage & Local Persistence Service
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 const STORAGE_KEYS = {
   AUTH_TOKEN: '@supportdesk:auth_token',
@@ -41,27 +42,67 @@ async function safeRemoveItem(key) {
   }
 }
 
+// Tokens live in the OS keychain/keystore, not plain AsyncStorage.
+// SecureStore keys may only contain [A-Za-z0-9._-].
+const secureKey = (key) => key.replace(/[^A-Za-z0-9._-]/g, '_');
+
+async function secureGet(key) {
+  try {
+    const value = await SecureStore.getItemAsync(secureKey(key));
+    if (value) return value;
+    // One-time migration of tokens saved by older builds in AsyncStorage.
+    const legacy = await safeGetItem(key);
+    if (legacy) {
+      await secureSet(key, legacy);
+      await safeRemoveItem(key);
+    }
+    return legacy;
+  } catch (err) {
+    console.warn(`[OfflineStorage] Secure read failed for ${key}:`, err);
+    return memoryStore.get(key) || null;
+  }
+}
+
+async function secureSet(key, value) {
+  memoryStore.set(key, value);
+  try {
+    await SecureStore.setItemAsync(secureKey(key), value);
+  } catch (err) {
+    console.warn(`[OfflineStorage] Secure write failed for ${key}:`, err);
+  }
+}
+
+async function secureRemove(key) {
+  memoryStore.delete(key);
+  try {
+    await SecureStore.deleteItemAsync(secureKey(key));
+    await AsyncStorage.removeItem(key);
+  } catch (err) {
+    console.warn(`[OfflineStorage] Secure delete failed for ${key}:`, err);
+  }
+}
+
 export const offlineStorage = {
   // Authentication persistence
   async saveAuth(token, user, refreshToken = null) {
-    await safeSetItem(STORAGE_KEYS.AUTH_TOKEN, token);
+    await secureSet(STORAGE_KEYS.AUTH_TOKEN, token);
     await safeSetItem(STORAGE_KEYS.AUTH_USER, user);
     if (refreshToken) {
-      await safeSetItem(STORAGE_KEYS.AUTH_REFRESH_TOKEN, refreshToken);
+      await secureSet(STORAGE_KEYS.AUTH_REFRESH_TOKEN, refreshToken);
     }
   },
 
   async getStoredAuth() {
-    const token = await safeGetItem(STORAGE_KEYS.AUTH_TOKEN);
+    const token = await secureGet(STORAGE_KEYS.AUTH_TOKEN);
     const user = await safeGetItem(STORAGE_KEYS.AUTH_USER);
-    const refreshToken = await safeGetItem(STORAGE_KEYS.AUTH_REFRESH_TOKEN);
+    const refreshToken = await secureGet(STORAGE_KEYS.AUTH_REFRESH_TOKEN);
     return { token, user, refreshToken };
   },
 
   async clearAuth() {
-    await safeRemoveItem(STORAGE_KEYS.AUTH_TOKEN);
+    await secureRemove(STORAGE_KEYS.AUTH_TOKEN);
     await safeRemoveItem(STORAGE_KEYS.AUTH_USER);
-    await safeRemoveItem(STORAGE_KEYS.AUTH_REFRESH_TOKEN);
+    await secureRemove(STORAGE_KEYS.AUTH_REFRESH_TOKEN);
   },
 
   // Tickets local cache

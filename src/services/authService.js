@@ -2,6 +2,12 @@
 import { api, setApiAuthToken, setOnUnauthorizedHandler } from './apiClient';
 import { offlineStorage } from './offlineStorage';
 
+// One refresh at a time: the backend revokes every token when a refresh token
+// is reused, so two parallel refreshes would log the user out.
+let refreshInFlight = null;
+// Bumped on logout so a refresh that finishes afterwards doesn't save tokens.
+let sessionEpoch = 0;
+
 export const authService = {
   /**
    * Log in user with real FastAPI backend
@@ -76,13 +82,26 @@ export const authService = {
   /**
    * Rotate refresh token and retrieve a fresh access token
    */
-  async refreshToken() {
+  refreshToken() {
+    if (!refreshInFlight) {
+      refreshInFlight = this._doRefresh().finally(() => {
+        refreshInFlight = null;
+      });
+    }
+    return refreshInFlight;
+  },
+
+  async _doRefresh() {
+    const epoch = sessionEpoch;
     const { refreshToken } = await offlineStorage.getStoredAuth();
     if (!refreshToken) {
       return { success: false, error: 'No refresh token available' };
     }
 
     const res = await api.post('/api/v1/auth/refresh', { refresh_token: refreshToken });
+    if (epoch !== sessionEpoch) {
+      return { success: false, error: 'Logged out' };
+    }
     if (res.success && res.data) {
       const { access_token, refresh_token: newRefreshToken, user } = res.data;
       setApiAuthToken(access_token);
@@ -103,6 +122,7 @@ export const authService = {
    * Log out session
    */
   async logout() {
+    sessionEpoch += 1;
     try {
       await api.post('/api/v1/auth/logout');
     } catch (_) {
@@ -110,6 +130,9 @@ export const authService = {
     }
     setApiAuthToken(null);
     await offlineStorage.clearAuth();
+    // Cached tickets and queued offline actions belong to this account only.
+    await offlineStorage.cacheTickets([]);
+    await offlineStorage.clearQueue();
     return { success: true };
   },
 

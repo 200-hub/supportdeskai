@@ -68,11 +68,9 @@ export const LoginScreen = ({
         }
       })
       .catch(() => {
+        // Never sign in without a verified response from the server.
         setLoading(false);
-        onLoginSuccess({
-          email: email.trim(),
-          role: selectedRole,
-        });
+        Alert.alert('Sign In Failed', 'Something went wrong. Please try again.');
       });
   };
 

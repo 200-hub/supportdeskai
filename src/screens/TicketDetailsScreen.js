@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +20,21 @@ import { ChatBubble } from '../components/common/ChatBubble';
 import { syncManager } from '../services/syncManager';
 import { ticketService } from '../services/ticketService';
 import { getApiAuthToken } from '../services/apiClient';
+import { useTopInset } from '../hooks/useTopInset';
+
+const formatTime = (iso) =>
+  iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now';
+
+// Server messages are snake_case; local/mock ones are camelCase. Accept both.
+const normalizeMessage = (m) => ({
+  ...m,
+  senderType: m.senderType || m.sender_type || 'customer',
+  senderName: m.senderName || m.sender_name,
+  time: m.time || formatTime(m.createdAt || m.created_at),
+});
+
+const formatDate = (iso) =>
+  iso ? new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : null;
 
 export const TicketDetailsScreen = ({
   ticket,
@@ -28,16 +42,17 @@ export const TicketDetailsScreen = ({
   onNavigateBack,
   onUpdateTicket,
 }) => {
-  const [messages, setMessages] = useState(ticket?.messages || []);
+  const [messages, setMessages] = useState((ticket?.messages || []).map(normalizeMessage));
   const [replyText, setReplyText] = useState('');
   const [isNoteMode, setIsNoteMode] = useState(false);
   const [ticketStatus, setTicketStatus] = useState(ticket?.status || 'open');
   const scrollViewRef = useRef(null);
   const insets = useSafeAreaInsets();
+  const topInset = useTopInset();
 
   useEffect(() => {
     if (ticket) {
-      setMessages(ticket.messages || []);
+      setMessages((ticket.messages || []).map(normalizeMessage));
       setTicketStatus(ticket.status || 'open');
       setReplyText('');
 
@@ -45,14 +60,7 @@ export const TicketDetailsScreen = ({
       if (token && ticket.id) {
         ticketService.getMessages(ticket.id, token).then((res) => {
           if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-            const mapped = res.data.map((m) => ({
-              id: m.id,
-              senderType: m.sender_type,
-              senderName: m.sender_name,
-              content: m.content,
-              time: m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
-            }));
-            setMessages(mapped);
+            setMessages(res.data.map(normalizeMessage));
           }
         }).catch(() => {});
       }
@@ -138,8 +146,9 @@ export const TicketDetailsScreen = ({
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+      behavior="padding"
+      // Same as AIChatScreen: KAV sits below App's StatusBarSpacer, so offset by the top inset.
+      keyboardVerticalOffset={topInset}
     >
       <ScreenHeader
         title={`#${ticket.id}`}
@@ -190,7 +199,7 @@ export const TicketDetailsScreen = ({
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
               <Text style={styles.detailKey}>Created</Text>
-              <Text style={styles.detailVal}>{ticket.createdDate || 'Oct 15, 2026'}</Text>
+              <Text style={styles.detailVal}>{ticket.createdDate || formatDate(ticket.created_at) || '—'}</Text>
             </View>
 
             <View style={styles.detailItem}>
@@ -211,7 +220,7 @@ export const TicketDetailsScreen = ({
                   { color: ticket.slaStatus === 'at-risk' ? COLORS.error : COLORS.success },
                 ]}
               >
-                {ticket.slaRemaining ? `${ticket.slaRemaining} remaining` : 'Resolved'}
+                {(ticket.slaRemaining || ticket.sla_remaining) ? `${ticket.slaRemaining || ticket.sla_remaining} remaining` : 'Resolved'}
               </Text>
             </View>
           </View>
@@ -263,7 +272,7 @@ export const TicketDetailsScreen = ({
               message={item.content}
               timestamp={item.time}
               isOutgoing={
-                user?.role === 'agent'
+                isAgentOrAdmin
                   ? item.senderType === 'agent'
                   : item.senderType === 'customer'
               }

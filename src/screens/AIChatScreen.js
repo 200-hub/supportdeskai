@@ -40,6 +40,10 @@ export const AIChatScreen = ({
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef();
+  // Latest messages, readable from the delayed AI reply. Using the `messages`
+  // captured at send time dropped earlier replies when sending twice quickly.
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
   const insets = useSafeAreaInsets();
   const topInset = useTopInset();
   const currentConvIdRef = useRef(initialConversation?.id || `conv-${Date.now()}`)
@@ -90,7 +94,8 @@ export const AIChatScreen = ({
       content: text.trim(),
     };
 
-    const updatedMessages = [...messages, userMsg];
+    const updatedMessages = [...messagesRef.current, userMsg];
+    messagesRef.current = updatedMessages;
     setMessages(updatedMessages);
     setInputText('');
     setIsTyping(true);
@@ -145,7 +150,8 @@ export const AIChatScreen = ({
       };
 
       setIsTyping(false);
-      const finalMessages = [...updatedMessages, aiReply];
+      const finalMessages = [...messagesRef.current, aiReply];
+      messagesRef.current = finalMessages;
       setMessages(finalMessages);
 
       if (onUpdateConversation) {

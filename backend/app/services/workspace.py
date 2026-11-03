@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import hash_password
+from app.core.security import hash_password_async
 from app.models.team import Team
 from app.models.tenant import Tenant
 from app.models.user import User, UserRole
@@ -67,7 +67,20 @@ async def invite_users(
     tenant_id: str,
     emails: List[str],
     role: str = "agent",
+    actor_role: UserRole = UserRole.AGENT,
 ) -> List[UserInvitation]:
+    invited_role = getattr(UserRole, (role or "").upper(), None)
+    if invited_role is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Unknown role '{role}'"
+        )
+    if invited_role == UserRole.ADMIN and actor_role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can invite administrators"
+        )
+    role = invited_role.value
     invitations = []
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
 
@@ -121,7 +134,7 @@ async def accept_invitation(
     user = User(
         tenant_id=inv.tenant_id,
         email=inv.email,
-        hashed_password=hash_password(data.password),
+        hashed_password=await hash_password_async(data.password),
         name=data.name.strip(),
         role=user_role,
         avatar_initials=initials,
@@ -199,7 +212,7 @@ async def create_workspace_user(
     user = User(
         tenant_id=tenant_id,
         email=clean_email,
-        hashed_password=hash_password(user_in.password),
+        hashed_password=await hash_password_async(user_in.password),
         name=user_in.name.strip(),
         role=user_in.role,
         phone=user_in.phone,

@@ -39,7 +39,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
-    allow_credentials=True,
+    # Auth is bearer tokens, not cookies. Credentials + wildcard origin would let
+    # any site make credentialed requests, so only enable with explicit origins.
+    allow_credentials="*" not in settings.BACKEND_CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )

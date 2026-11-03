@@ -22,8 +22,10 @@ Design notes
 
 import hashlib
 import hmac
+import json
 import logging
-from typing import Optional
+import time
+from typing import Any, Dict, Optional, Tuple
 
 from fastapi import HTTPException, Request, status
 
@@ -122,62 +124,81 @@ async def verify_whatsapp_signature(request: Request) -> bytes:
 # Email webhooks — Mailgun HMAC-SHA256 (default)
 # ---------------------------------------------------------------------------
 
-async def verify_email_signature(request: Request) -> bytes:
+# Mailgun signatures older/newer than this are rejected (replay window).
+MAILGUN_MAX_SKEW_SECONDS = 300
+# ponytail: per-process replay cache; use Redis/DB when running >1 instance.
+_seen_mailgun_tokens: Dict[str, float] = {}
+
+
+def _check_mailgun_replay(timestamp: str, token: str) -> None:
+    try:
+        ts = float(timestamp)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Mailgun timestamp")
+    now = time.time()
+    if abs(now - ts) > MAILGUN_MAX_SKEW_SECONDS:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Stale Mailgun webhook signature")
+    for old, seen_at in list(_seen_mailgun_tokens.items()):
+        if now - seen_at > MAILGUN_MAX_SKEW_SECONDS * 2:
+            del _seen_mailgun_tokens[old]
+    if token in _seen_mailgun_tokens:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Replayed Mailgun webhook token")
+    _seen_mailgun_tokens[token] = now
+
+
+async def parse_email_payload(request: Request, raw_body: bytes) -> Optional[Dict[str, Any]]:
+    """JSON body, or Mailgun-style form post (urlencoded/multipart). None if unparseable."""
+    content_type = request.headers.get("content-type", "")
+    if content_type.startswith(("multipart/form-data", "application/x-www-form-urlencoded")):
+        form = await request.form()
+        return {k: v for k, v in form.items() if isinstance(v, str)}  # attachments skipped
+    try:
+        data = json.loads(raw_body)
+    except (ValueError, UnicodeDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+async def verify_email_signature(request: Request) -> Tuple[bytes, Optional[Dict[str, Any]]]:
     """
-    Verify Mailgun's timestamp/token/signature triple for inbound email webhooks.
+    Verify an inbound email webhook and return ``(raw_body, payload)``.
 
-    Mailgun signs with HMAC-SHA256 over ``timestamp + token`` using the
-    Mailgun Webhook Signing Key as the HMAC key. The result is compared to
-    the ``signature`` field in the JSON payload.
+    * Mailgun: HMAC-SHA256 over ``timestamp + token`` with ``EMAIL_WEBHOOK_SECRET``,
+      from JSON (flat or nested ``signature`` object) or form fields. The
+      timestamp must be within ``MAILGUN_MAX_SKEW_SECONDS`` and each token is
+      accepted once, so a captured signature can't be replayed.
+    * Fallback: ``X-Webhook-Signature`` header = HMAC-SHA256 over the raw body.
 
-    If the payload does not include a Mailgun signature triple (e.g. the
-    provider is different), the function falls back to checking the generic
-    ``X-Webhook-Signature`` header with the same HMAC key, so SendGrid-style
-    integrations can reuse the same secret variable.
-
-    Environment variable
-    --------------------
-    ``EMAIL_WEBHOOK_SECRET`` — Mailgun Webhook Signing Key, or the shared
-    HMAC secret for other providers.
-
-    Raises
-    ------
-    HTTP 401 if the signature is missing or invalid.
-    HTTP 503 in production when the secret is not configured.
+    ``payload`` is None when the body is neither JSON nor a form post.
+    HTTP 401 on missing/invalid signature, 503 in production without a secret.
     """
-    import json
-
     raw_body = await request.body()
+    payload = await parse_email_payload(request, raw_body)
     secret = _require_secret(
         getattr(settings, "EMAIL_WEBHOOK_SECRET", None),
         "Email",
     )
     if secret is None:
-        return raw_body
+        return raw_body, payload
 
-    # Try Mailgun triple (token/timestamp/signature in JSON body)
-    try:
-        body_json = json.loads(raw_body)
-    except (ValueError, UnicodeDecodeError):
-        body_json = {}
-
-    mailgun_timestamp = body_json.get("timestamp") or body_json.get("signature", {}).get("timestamp")
-    mailgun_token = body_json.get("token") or body_json.get("signature", {}).get("token")
-    mailgun_sig = body_json.get("signature") if isinstance(body_json.get("signature"), str) else (
-        body_json.get("signature", {}).get("signature") if isinstance(body_json.get("signature"), dict) else None
-    )
+    fields = payload or {}
+    nested = fields.get("signature") if isinstance(fields.get("signature"), dict) else {}
+    mailgun_timestamp = fields.get("timestamp") or nested.get("timestamp")
+    mailgun_token = fields.get("token") or nested.get("token")
+    mailgun_sig = fields.get("signature") if isinstance(fields.get("signature"), str) else nested.get("signature")
 
     if mailgun_timestamp and mailgun_token and mailgun_sig:
         data = f"{mailgun_timestamp}{mailgun_token}".encode("utf-8")
         expected = hmac.new(
             secret.encode("utf-8"), data, hashlib.sha256
         ).hexdigest()
-        if not hmac.compare_digest(mailgun_sig, expected):
+        if not hmac.compare_digest(str(mailgun_sig), expected):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email webhook Mailgun signature verification failed",
             )
-        return raw_body
+        _check_mailgun_replay(str(mailgun_timestamp), str(mailgun_token))
+        return raw_body, payload
 
     # Fallback: generic X-Webhook-Signature header (HMAC-SHA256 over raw body)
     header_sig = request.headers.get("X-Webhook-Signature", "")
@@ -194,5 +215,4 @@ async def verify_email_signature(request: Request) -> bytes:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email webhook signature verification failed",
         )
-    return raw_body
-
+    return raw_body, payload

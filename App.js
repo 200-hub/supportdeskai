@@ -39,7 +39,6 @@ import { KnowledgeBaseScreen } from './src/screens/KnowledgeBaseScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { authService } from './src/services/authService';
 import { syncManager } from './src/services/syncManager';
-import { offlineStorage } from './src/services/offlineStorage';
 
 export default function App() {
   // Authentication state
@@ -157,6 +156,12 @@ export default function App() {
   const handleLogout = () => {
     authService.logout();
     setCurrentUser(INITIAL_USER);
+    // Drop the previous account's data so the next user on this device can't see it.
+    setTickets(INITIAL_TICKETS);
+    setConversations(INITIAL_CONVERSATIONS);
+    setNotifications(INITIAL_NOTIFICATIONS);
+    setSelectedTicket(null);
+    setSelectedConversation(null);
     setAuthScreen('welcome');
     setActiveOverlay(null);
     setCustomerTab('home');
@@ -523,7 +528,6 @@ export default function App() {
     currentUser.role === 'agent';
 
   const unreadTicketsCount = tickets.filter((t) => t.status === 'open').length;
-  const unreadNotifsCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <SafeAreaProvider>

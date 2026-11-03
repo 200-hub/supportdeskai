@@ -1,6 +1,5 @@
-import os
 from typing import List, Optional, Union
-from pydantic import AnyHttpUrl, field_validator
+from pydantic import AnyHttpUrl, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,24 +18,35 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "SupportDeskAI Backend"
     VERSION: str = "1.0.0"
     ENVIRONMENT: str = "development"
-    DEBUG: bool = True
+    DEBUG: bool = False
     API_V1_STR: str = "/api/v1"
 
     # Security & JWT Authentication
     SECRET_KEY: str = "insecure_dev_secret_key_change_in_production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    # Short-lived; the app rotates it with the 30-day refresh token. Keeps a
+    # stolen/logged-out access token useful for at most an hour.
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    # Lets /auth/register create agents/admins in an existing workspace.
+    # Only for automated tests and local demos; keep False in production.
+    ALLOW_STAFF_SELF_REGISTRATION: bool = False
 
-    @field_validator("SECRET_KEY")
-    @classmethod
-    def validate_secret_key(cls, v: str) -> str:
-        env = os.environ.get("ENVIRONMENT", "development").lower()
-        if env not in ("development", "testing", "dev", "test"):
-            if v == "insecure_dev_secret_key_change_in_production" or len(v) < 32:
+    @model_validator(mode="after")
+    def validate_secret_key(self) -> "Settings":
+        # Uses the loaded ENVIRONMENT (env var or .env), not just os.environ.
+        if self.ENVIRONMENT.lower() not in ("development", "testing", "dev", "test"):
+            if self.SECRET_KEY == "insecure_dev_secret_key_change_in_production" or len(self.SECRET_KEY) < 32:
                 raise ValueError(
                     "In production, SECRET_KEY must be a cryptographically secure key of at least 32 characters."
                 )
-        return v
+        return self
+
+    # Outbound email (password reset). Unset SMTP_HOST = no email is sent.
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM: str = "no-reply@supportdesk.ai"
 
     # Database Configuration (PostgreSQL)
     POSTGRES_SERVER: str = "localhost"
@@ -55,12 +65,15 @@ class Settings(BaseSettings):
     # Set these to the signing secrets provided by each provider's dashboard.
     # In production, missing secrets cause the endpoint to return 503.
     WHATSAPP_WEBHOOK_SECRET: Optional[str] = None   # Meta App Secret (HMAC-SHA256 key)
+    WHATSAPP_VERIFY_TOKEN: Optional[str] = None     # Meta "Verify Token" for the GET handshake (falls back to the secret)
     EMAIL_WEBHOOK_SECRET: Optional[str] = None       # Mailgun Webhook Signing Key (or generic HMAC key)
 
     # Rate Limiting
     # TRUST_PROXY_HEADERS: set to True ONLY when behind a trusted reverse proxy
     # that rewrites X-Forwarded-For (nginx, AWS ALB, Cloudflare, etc.)
     TRUST_PROXY_HEADERS: bool = False
+    # How many proxies sit in front of the app (Render/Railway: 1).
+    TRUSTED_PROXY_HOPS: int = 1
 
     # CORS configuration - Allow React Native / Expo development
     BACKEND_CORS_ORIGINS: List[str] = ["*"]

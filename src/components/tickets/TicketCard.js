@@ -112,15 +112,15 @@ export const TicketCard = ({
       {showCustomer && ticket.customer && (
         <View style={styles.customerRow}>
           <Avatar
-            initials={ticket.customer.avatarInitials || 'CU'}
+            initials={ticket.customer?.avatarInitials || 'CU'}
             size={24}
             bgColor={COLORS.secondaryNavy}
           />
           <View style={styles.customerInfo}>
-            <Text style={styles.customerName}>{ticket.customer.name}</Text>
-            {ticket.customer.company && (
+            <Text style={styles.customerName}>{ticket.customer?.name || 'Customer'}</Text>
+            {ticket.customer?.company && (
               <Text style={styles.customerCompany} numberOfLines={1}>
-                • {ticket.customer.company}
+                • {ticket.customer?.company}
               </Text>
             )}
           </View>

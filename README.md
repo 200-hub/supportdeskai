@@ -1,186 +1,451 @@
-# SupportDesk AI — Omnichannel Customer Support Platform
+# SupportDesk AI
 
-> A multi-tenant customer-support platform designed to bring email, live chat, WhatsApp, and web-form requests into one unified ticket inbox, with SLA management, intelligent routing, workflow automation, customer satisfaction tracking, and AI assistance.
+A multi-tenant customer-support platform: a **React Native (Expo) app** for customers, agents and admins, backed by a **Python FastAPI + PostgreSQL** API. Tickets can come in from the app, email (Mailgun), WhatsApp (Meta Cloud API), a web chat widget and public web forms, and are handled with SLAs, routing, macros, automations, a knowledge base and an AI assistant.
 
-## Overview
+> This README describes the **`masiatun`** branch.
 
-**SupportDesk AI** is designed for SaaS companies, e-commerce brands, D2C startups, agencies, and IT teams that manage customer support operations. The platform aims to reduce first-response and resolution times, deflect repetitive questions with a knowledge-grounded AI chatbot, and give support managers visibility into workload, SLA performance, and customer satisfaction.
+---
 
-**Project difficulty:** Advanced / Expert
+## Contents
 
-## Core Features
+1. [What's in this repo](#1-whats-in-this-repo)
+2. [Prerequisites](#2-prerequisites)
+3. [Quick start](#3-quick-start)
+4. [Running the backend](#4-running-the-backend)
+5. [Running the frontend (app)](#5-running-the-frontend-app)
+6. [Test accounts](#6-test-accounts)
+7. [Running the tests](#7-running-the-tests)
+8. [Configuration reference](#8-configuration-reference)
+9. [API overview](#9-api-overview)
+10. [Deployment](#10-deployment)
+11. [Security model](#11-security-model)
+12. [Troubleshooting](#12-troubleshooting)
+13. [Known limitations](#13-known-limitations)
 
-- **Unified omnichannel inbox** — bring email, live chat, WhatsApp, and web-form requests into a common ticket workflow.
-- **Ticket management** — ticket assignment, statuses, priorities, tags, internal notes, public replies, attachments, saved views, merging, splitting, and bulk actions.
-- **Real-time collaboration** — live updates, agent presence, typing indicators, and collision detection.
-- **SLA management** — first-response, next-response, and resolution targets based on business hours, with at-risk alerts and escalations.
-- **Intelligent routing** — round-robin, least-load, skills-based, and sticky assignment strategies.
-- **Macros and automations** — reusable replies and event-based or time-based workflows.
-- **Knowledge base and help center** — article authoring, versions, translations, search, feedback, and customer self-service.
-- **AI copilot** — draft, rewrite, shorten, translate, summarize, and classify support conversations.
-- **RAG chatbot** — answer from tenant-specific knowledge sources, provide citations, and hand off to a human when confidence is insufficient.
-- **Customer satisfaction (CSAT)** — post-resolution surveys, response tracking, and score summaries.
-- **Reports and analytics** — ticket volume, response and resolution times, SLA performance, agent performance, CSAT, and AI usage.
-- **Administration and access control** — tenant settings, users, teams, roles, channel configuration, security settings, and audit logs.
-- **Integrations and billing** — planned integrations include Slack, Jira, Shopify, webhooks, and Stripe Billing.
+---
 
-## Technology Stack
+## 1. What's in this repo
 
-The following is the **recommended architecture from the project specification**; it does not imply that every component has already been implemented.
-
-| Layer | Recommended technologies |
-|---|---|
-| Agent app and admin console | Next.js 15, React 19, TypeScript, TanStack Query, Zustand, Tailwind CSS, Radix UI, TipTap |
-| Help center | Next.js SSR/ISR with tenant-specific theming |
-| Embeddable chat widget | Preact, Vite, Shadow DOM |
-| Backend API | NestJS, Node.js 22, REST, OpenAPI |
-| Background jobs | BullMQ workers |
-| Primary database | PostgreSQL 16 with Row-Level Security (RLS) |
-| Vector search | pgvector |
-| Cache, presence, and queues | Redis 7 |
-| Full-text search | OpenSearch |
-| Real-time communication | Socket.IO and Server-Sent Events (SSE) |
-| AI | OpenAI and/or Anthropic APIs, embeddings, retrieval and reranking |
-| Object storage | Amazon S3 and signed URLs |
-| Email | AWS SES |
-| WhatsApp | Meta WhatsApp Cloud API |
-| Payments | Stripe Billing |
-| Infrastructure | Docker, Kubernetes, Terraform, GitHub Actions |
-| Observability | OpenTelemetry, Grafana/Prometheus, Loki, Tempo, Sentry |
-
-## High-Level Architecture
+| Part | Tech | Location |
+|---|---|---|
+| Mobile / web app | Expo SDK 58, React Native 0.88, React 19 | `App.js`, `src/` |
+| Backend API | Python 3.12+, FastAPI, SQLAlchemy 2 (async), Pydantic v2 | `backend/app/` |
+| Database | PostgreSQL 16, Alembic migrations | `backend/alembic/` |
+| Auth | Argon2id password hashing, JWT access token (1 h) + rotating refresh token (30 days) | `backend/app/core/security.py` |
+| Web chat widget | Standalone HTML page | `front.html` |
+| Local infrastructure | Docker Compose (Postgres + optional API container) | `docker-compose.yml` |
 
 ```text
-Agent App / Admin Console / Help Center / Chat Widget
-                         |
-                   API Gateway
-                         |
-               NestJS Core API
-                         |
-       +-----------------+------------------+
-       |                 |                  |
-  PostgreSQL          Redis              OpenSearch
-  + pgvector       + BullMQ queues       Full-text search
-       |                 |
-       +---------- Background Workers
-                         |
-       +-----------------+------------------+
-       |                 |                  |
-   Email / SES     WhatsApp Cloud API    AI / RAG
-                         |
-                 Integrations / Billing
-```
-
-## Main Application Areas
-
-- **Public site and help center:** landing page, pricing, documentation, searchable articles, ticket submission, and customer ticket portal.
-- **Authentication:** signup, login, password recovery, email verification, invitations, two-factor authentication, and enterprise SSO options.
-- **Agent workspace:** inbox, live chat, contacts, organizations, knowledge base, reports, and profile settings.
-- **Tenant administration:** team and role management, channel configuration, routing, SLAs, automations, AI settings, CSAT, integrations, billing, and security.
-- **Platform administration:** tenant health, usage, feature flags, channel health, and platform audit tools.
-
-## Repository Structure
-
-The specification proposes a monorepo organized roughly as follows. Adjust this structure as implementation evolves.
-
-```text
-supportdesk-ai/
-├── apps/
-│   ├── web/                 # Agent workspace and admin console
-│   ├── help-center/         # Tenant help center and customer portal
-│   ├── widget/              # Embeddable Preact chat widget
-│   └── marketing/           # Public marketing website
-├── services/
-│   ├── api/                 # NestJS core API and modules
-│   └── workers/             # Email, SLA, routing, AI, and other workers
-├── packages/
-│   ├── db/                  # Schema, migrations, RLS policies, seeds
-│   ├── contracts/           # Shared schemas, API and WebSocket types
-│   ├── ai/                  # Prompts, retrieval, guardrails, evaluations
-│   ├── sla-calendar/        # Business-hours and SLA calculations
-│   ├── rules/               # Routing and automation rules
-│   ├── ui/                  # Shared design-system components
-│   └── config/              # Shared tooling configuration
-├── infra/                   # Terraform, Kubernetes, observability
-├── tests/                   # E2E, load, AI-evaluation, security tests
-├── docs/                    # Architecture, API docs, runbooks
+supportdeskai/
+├── App.js                      # App root: auth flow, tabs, overlays
+├── index.js                    # Expo entry point
+├── app.json                    # Expo config (name, icons, plugins)
+├── src/
+│   ├── screens/                # Welcome, Login, Register, Customer home, Agent dashboard, Inbox, Ticket details, AI chat, ...
+│   ├── components/             # Shared UI (buttons, inputs, badges, tab bars, ticket card)
+│   ├── services/               # apiClient, authService, syncManager (offline queue), offlineStorage, ...
+│   ├── hooks/useTopInset.js    # Safe status-bar inset on Android
+│   ├── data/mockData.js        # Demo data shown before/without the backend
+│   └── theme/                  # Colors, typography, spacing
+├── backend/
+│   ├── app/
+│   │   ├── main.py             # FastAPI app, CORS, error handlers
+│   │   ├── api/v1/             # Routers (auth, tickets, crm, channels, sla, ...)
+│   │   ├── core/               # config, security, rate limiting, webhook signatures, mailer
+│   │   ├── models/             # SQLAlchemy models
+│   │   ├── schemas/            # Pydantic request/response models
+│   │   └── services/           # Business logic
+│   ├── alembic/versions/       # Database migrations
+│   ├── scripts/seed_demo_accounts.py
+│   ├── tests/                  # 172 pytest tests
+│   ├── .env.example
+│   ├── Dockerfile, render.yaml, railway.toml
+│   └── requirements.txt
 ├── docker-compose.yml
-├── turbo.json
-└── package.json
+└── IMPLEMENTATION_STATUS.md    # Module-by-module implementation notes
 ```
 
-## Development Roadmap
+---
 
-The specification outlines a phased implementation:
+## 2. Prerequisites
 
-1. **Foundations** — monorepo, CI, local development environment, authentication, tenants, roles, and design-system shell.
-2. **Core ticketing** — tickets, messages, notes, attachments, assignment, custom fields, tags, and agent inbox.
-3. **Email channel** — inbound parsing, threading, outbound email, and customer identities.
-4. **Real-time and live chat** — Socket.IO, presence, collision detection, widget, and chat-to-ticket flow.
-5. **SLA and routing** — business calendars, policies, timers, escalations, and routing strategies.
-6. **Productivity** — macros, automations, bulk actions, and search.
-7. **Knowledge base** — article management, help center, customer portal, and article suggestions.
-8. **AI copilot and RAG bot** — indexing, retrieval, drafting, classification, human handoff, and AI evaluations.
-9. **WhatsApp and forms** — Meta integration, webhooks, templates, and web forms.
-10. **CSAT and reporting** — surveys, dashboards, exports, and AI-impact reports.
-11. **Billing and integrations** — Stripe, usage metering, API keys, and external integrations.
-12. **Enterprise hardening** — SSO/SCIM, audit and retention tooling, load testing, and security testing.
+| Tool | Version | Needed for |
+|---|---|---|
+| **Python** | 3.12 or newer (tested on 3.13) | Backend |
+| **Node.js + npm** | Current LTS or newer (tested on Node 26 / npm 11) | Frontend |
+| **Docker Desktop** | Any recent version | Running PostgreSQL locally (or install PostgreSQL 16 yourself) |
+| **Expo Go** app | Latest, from the App Store / Play Store | Optional: running the app on a real phone |
+| Android Studio emulator / Xcode simulator | — | Optional |
 
-## Security Principles
+---
 
-Security requirements in the specification include:
+## 3. Quick start
 
-- Enforce tenant isolation in PostgreSQL using RLS and tenant-scoped queries.
-- Apply role-based authorization to protected operations.
-- Validate request payloads and rate-limit sensitive endpoints.
-- Verify provider webhook signatures and handle duplicate events idempotently.
-- Sanitize inbound email HTML and validate uploaded files.
-- Keep secrets out of source control; use a secret manager in deployed environments.
-- Use TLS in transit and encryption at rest.
-- Redact sensitive personal information before sending content to AI providers where configured.
-- Ground chatbot answers in retrieved knowledge, include citations, and hand off when confidence is insufficient.
-- Maintain audit trails for security-sensitive administrative actions.
+Windows PowerShell, from the repo root. macOS/Linux differences are noted in sections 4 and 5.
 
-## Getting Started
+```powershell
+# 1. Database
+docker compose up -d db
 
-This repository's exact setup commands, package scripts, environment variables, and service configuration depend on the implementation. They are **not specified here**, so they should be documented after the initial codebase and development environment are created.
+# 2. Backend (terminal 1)
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-Before running the full platform, the planned architecture may require:
+# 3. Test accounts (terminal 2, backend running)
+cd backend
+.\.venv\Scripts\Activate.ps1
+python scripts/seed_demo_accounts.py
 
-- Node.js 22 for the backend services (as specified in the architecture)
-- A package manager and monorepo tooling configured by the repository
-- PostgreSQL 16 with the pgvector extension
-- Redis 7
-- OpenSearch
-- Docker and Docker Compose
-- Credentials/configuration for any external services you enable, such as AI providers, AWS SES, Meta WhatsApp Cloud API, or Stripe
+# 4. App (terminal 3, repo root)
+npm install
+npx expo start --web            # opens http://localhost:8081 in the browser
+```
 
-Do not commit `.env` files, API keys, tokens, database passwords, or other secrets. Add required variable names to a `.env.example` file with placeholder values only.
+Then sign in with one of the [test accounts](#6-test-accounts).
 
-## Testing and Quality
+---
 
-The specification recommends:
+## 4. Running the backend
 
-- Unit and integration tests for business logic, authorization, and SLA calculations.
-- End-to-end tests with Playwright.
-- Load tests with k6.
-- Tenant-isolation and security tests.
-- AI evaluation sets for answer faithfulness and relevance.
-- Monitoring and tracing with OpenTelemetry and related observability tools.
+All backend commands run from the **`backend/`** folder, because settings are read from `backend/.env`.
 
-## Project Status
+### 4.1 Start PostgreSQL
 
-This README describes the **planned project based on the supplied specification**. Features, integrations, deployment infrastructure, and setup instructions should be marked as implemented only after they are available and verified in the repository.
+The easiest way is Docker. From the repo root:
 
-## Contributing
+```powershell
+docker compose up -d db
+```
 
-Contributions can be organized around the roadmap above. Before submitting changes:
+This starts `postgres:16-alpine` on `localhost:5432` with:
 
-1. Discuss or document the intended change.
-2. Follow the repository's formatting, linting, and testing conventions once configured.
-3. Add or update tests for the changed behavior.
-4. Never include secrets or real customer data in commits.
+| Setting | Value |
+|---|---|
+| User | `supportdesk` |
+| Password | `supportdesk_password` |
+| Database | `supportdesk_db` |
 
-## License
+These match the backend's built-in defaults, so **no `.env` is needed for local development**.
 
-No license has been specified yet. Add a `LICENSE` file before distributing or reusing this project publicly.
+To use your own PostgreSQL instead, create a `backend/.env` that points at it (see 4.3).
+
+### 4.2 Install Python dependencies
+
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1        # macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 4.3 (Optional) Create `backend/.env`
+
+The defaults work for local development: development mode, debug off, a dev-only secret key and the Docker Postgres above. Create a `.env` only to change something:
+
+```ini
+# backend/.env — local development example
+ENVIRONMENT=development
+DEBUG=True                       # shows real error messages and logs SQL
+SECRET_KEY=any-local-dev-value
+# DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/dbname   # overrides POSTGRES_* below
+POSTGRES_SERVER=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=supportdesk
+POSTGRES_PASSWORD=supportdesk_password
+POSTGRES_DB=supportdesk_db
+```
+
+> ⚠️ `backend/.env.example` is a **production** template (`ENVIRONMENT=production`). If you copy it for local work, change `ENVIRONMENT` to `development`. In production mode the API refuses to start with a weak `SECRET_KEY`, webhooks return 503 until their secrets are set, and password-reset tokens are only sent by email.
+
+Never commit `.env`; it is already in `backend/.gitignore`.
+
+### 4.4 Create or upgrade the database tables
+
+```powershell
+alembic upgrade head
+```
+
+Run this after every pull that adds a migration. Other useful commands:
+
+```powershell
+alembic current                      # which migration the DB is on
+alembic downgrade -1                 # roll back one migration
+alembic revision --autogenerate -m "describe change"   # after editing models
+```
+
+### 4.5 Start the API
+
+```powershell
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+`--host 0.0.0.0` makes the API reachable from phones and emulators on your network, and `--reload` restarts the server when code changes.
+
+| URL | What |
+|---|---|
+| http://localhost:8000/health | Health check |
+| http://localhost:8000/api/v1/docs | **Swagger UI**: try every endpoint in the browser |
+| http://localhost:8000/api/v1/redoc | ReDoc API reference |
+
+### 4.6 Alternative: everything in Docker
+
+```powershell
+docker compose up -d --build                      # Postgres + API container on :8000
+docker compose exec backend alembic upgrade head  # create tables (first run / after new migrations)
+docker compose exec backend python scripts/seed_demo_accounts.py
+```
+
+Don't run this and a local `uvicorn` at the same time, because both use port 8000.
+
+---
+
+## 5. Running the frontend (app)
+
+From the **repo root**:
+
+```powershell
+npm install
+```
+
+### 5.1 Point the app at the backend
+
+The app picks the API address like this (`src/services/apiClient.js`):
+
+| Where the app runs | Default API URL |
+|---|---|
+| Web browser / iOS simulator | `http://localhost:8000` |
+| Android emulator | `http://10.0.2.2:8000` (the emulator's alias for your PC) |
+| **Real phone (Expo Go)** | ❌ No working default. You must set `EXPO_PUBLIC_API_URL` |
+
+For a real phone, use your computer's **LAN IP**. Find it with `ipconfig` on Windows, `ipconfig getifaddr en0` on macOS, or `hostname -I` on Linux. Then create **`.env.local`** in the repo root:
+
+```ini
+EXPO_PUBLIC_API_URL=http://192.168.1.22:8000
+```
+
+Replace `192.168.1.22` with your own IP. Restart Expo after changing this file. It is git-ignored.
+
+### 5.2 Start the app
+
+```powershell
+npx expo start          # dev server + QR code, then press a key:
+                        #   w = open in web browser
+                        #   a = open on Android emulator
+                        #   i = open on iOS simulator (macOS only)
+```
+
+Shortcuts: `npm run web`, `npm run android`, `npm run ios`.
+
+**On a real phone:** install **Expo Go**, put the phone on the **same Wi‑Fi** as your computer, and scan the QR code printed by `npx expo start`. On iOS, use the Camera app to scan.
+
+If the QR code doesn't connect, try `npx expo start --tunnel`.
+
+### 5.3 Web vs. phone differences
+
+- **Staying signed in:** on a phone, login tokens are stored in the OS keychain/keystore (`expo-secure-store`) and survive restarts. In a web browser secure storage isn't available, so you need to **sign in again after reloading the page**.
+- **Layout:** the app is designed for phone screens. In a desktop browser, narrow the window or use the browser's device toolbar for the intended layout.
+
+---
+
+## 6. Test accounts
+
+All accounts are in the **`default-tenant`** workspace, which the app signs into:
+
+| Role | Email | Password | What you see |
+|---|---|---|---|
+| **Admin** | `admin@demo.com` | `Password123!` | Opens on Admin Settings (workspace, users & roles); full agent permissions in the API |
+| **Agent** | `agent@demo.com` | `Password123!` | Agent dashboard, inbox, ticket replies, internal notes, CRM |
+| **Customer** | `customer@demo.com` | `Password123!` | Customer home, create/track tickets, AI chat, help center |
+
+These accounts are **not** in the migrations. Create them on any fresh database, with the backend running:
+
+```powershell
+cd backend
+python scripts/seed_demo_accounts.py                         # local API
+python scripts/seed_demo_accounts.py https://your-api.example.com   # any other API
+```
+
+The script is safe to run repeatedly; existing accounts are left alone.
+
+### How accounts work
+
+- **Customers** can sign up themselves in the app (**Get Started**).
+- **Agents and admins cannot self-register into an existing workspace.** An admin invites them with `POST /api/v1/tenants/invite`, which returns an invitation token, and the invitee accepts with `POST /api/v1/tenants/invitations/{token}/accept`.
+- Only **admins** can invite admins. Agents can invite agents and customers.
+- The **first person to register a brand-new workspace slug** may choose any role (the founder).
+
+> Never use these demo passwords on a deployed server. Create real admin accounts instead.
+
+---
+
+## 7. Running the tests
+
+### Backend
+
+```powershell
+cd backend
+.\.venv\Scripts\Activate.ps1
+pytest -q
+```
+
+This runs 172 tests against a temporary SQLite database. They don't need PostgreSQL or a running server, and cover auth, RBAC, tenant isolation, tickets, SLA, routing, macros, automations, CRM, channels and webhook security.
+
+To check that migrations match the models on real PostgreSQL:
+
+```powershell
+alembic upgrade head
+alembic check      # remaining output is only index-naming/enum-as-varchar noise; there should be no "add_column"
+```
+
+### Frontend
+
+There is no automated frontend test suite yet. To check that the app compiles for each platform:
+
+```powershell
+npx expo export --platform android --output-dir dist-check
+npx expo export --platform ios --output-dir dist-check
+npx expo install --check     # SDK-compatible dependency versions
+```
+
+---
+
+## 8. Configuration reference
+
+Backend settings are read from environment variables or `backend/.env` (`backend/app/core/config.py`).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ENVIRONMENT` | `development` | `development` / `testing` / `production`. Production enforces a strong `SECRET_KEY` and webhook secrets |
+| `DEBUG` | `False` | `True` = real error text in 500 responses + SQL logging. **Never in production** |
+| `SECRET_KEY` | dev placeholder | JWT signing key. Production requires ≥ 32 chars (`openssl rand -hex 32`) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `60` | Access-token lifetime; the app refreshes it automatically |
+| `DATABASE_URL` | — | Full DB URL (overrides `POSTGRES_*`). `postgresql://` is converted to the async driver automatically |
+| `POSTGRES_SERVER` / `_PORT` / `_USER` / `_PASSWORD` / `_DB` | match docker-compose | Used when `DATABASE_URL` is empty |
+| `BACKEND_CORS_ORIGINS` | `["*"]` | Allowed web origins. Credentials are only allowed with an explicit list |
+| `TRUST_PROXY_HEADERS` | `False` | Set `True` behind a reverse proxy (Render/Railway/Nginx) so rate limits use the real client IP |
+| `TRUSTED_PROXY_HOPS` | `1` | Number of proxies in front of the app |
+| `ALLOW_STAFF_SELF_REGISTRATION` | `False` | **Tests/demos only.** Lets `/auth/register` create agents/admins in existing workspaces |
+| `AI_PROVIDER` / `AI_API_KEY` / `AI_MODEL` | `mock` | AI chat/copilot provider. `mock` needs no key |
+| `WHATSAPP_WEBHOOK_SECRET` | — | Meta App Secret, used to verify `X-Hub-Signature-256` |
+| `WHATSAPP_VERIFY_TOKEN` | — | Meta "Verify Token" for the webhook handshake (falls back to the secret) |
+| `EMAIL_WEBHOOK_SECRET` | — | Mailgun webhook signing key (or a shared HMAC key) |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` | unset / 587 | Outbound email for password resets. Without `SMTP_HOST`, no email is sent |
+
+Frontend:
+
+| Variable | Purpose |
+|---|---|
+| `EXPO_PUBLIC_API_URL` | Backend base URL, e.g. `http://192.168.1.22:8000` or `https://api.example.com`. Put it in `.env.local` (dev) or your EAS build env |
+
+---
+
+## 9. API overview
+
+Base path: `/api/v1`. Full interactive docs: **http://localhost:8000/api/v1/docs**.
+
+Authenticated requests send `Authorization: Bearer <access_token>`.
+
+| Prefix | Area | Who |
+|---|---|---|
+| `/auth` | register, login, refresh, me, logout, password reset | public / any user |
+| `/tenants` | workspace settings, invitations, workspace users | admin / agent |
+| `/tickets` | tickets, messages, internal notes, status, assignment | customers see only their own tickets |
+| `/crm` | organizations & contacts | admin / agent |
+| `/teams` | teams | admin / agent |
+| `/sla`, `/routing`, `/macros`, `/automations` | SLA policies, routing rules, canned replies, triggers | admin / agent |
+| `/knowledge` | knowledge-base topics & articles | any user |
+| `/ai` | AI chat / copilot | any user |
+| `/analytics` | dashboard metrics | admin / agent |
+| `/notifications` | in-app notifications | any user |
+| `/channels` | channel config + inbound webhooks | admin / provider webhooks |
+| `/public` | public web forms, web-chat visitor sessions | unauthenticated, rate-limited |
+
+### Inbound webhooks
+
+Set these URLs in each provider's dashboard, replacing `{tenant_slug}` with the workspace slug, e.g. `default-tenant`:
+
+| Provider | URL | Verification |
+|---|---|---|
+| WhatsApp (Meta) | `GET/POST /api/v1/channels/webhook/whatsapp/{tenant_slug}` | `X-Hub-Signature-256` HMAC with `WHATSAPP_WEBHOOK_SECRET`; the GET handshake checks `WHATSAPP_VERIFY_TOKEN` |
+| Email (Mailgun) | `POST /api/v1/channels/webhook/email/{tenant_slug}` | Mailgun `timestamp`/`token`/`signature`. Signatures older than 5 min or reused tokens are rejected. Also accepts an `X-Webhook-Signature` HMAC over the raw body |
+
+- **WhatsApp:** each inbound message becomes a ticket. Delivery/read receipts are acknowledged and ignored.
+- **Email:** Mailgun's form posts (`sender`, `From`, `subject`, `body-plain`/`stripped-text`) and plain JSON (`from`, `subject`, `text`) are both accepted.
+
+---
+
+## 10. Deployment
+
+| Target | Config file | Notes |
+|---|---|---|
+| **Render** | `backend/render.yaml` | Blueprint creates the API + a Postgres DB, generates `SECRET_KEY`, sets `TRUST_PROXY_HEADERS=true`, runs `alembic upgrade head` as a **pre-deploy** step |
+| **Railway** | `backend/railway.toml` | Runs migrations then starts uvicorn. Set `ENVIRONMENT=production`, `SECRET_KEY`, `DATABASE_URL`, `TRUST_PROXY_HEADERS=true` in the Railway dashboard |
+| **Any Docker host** | `backend/Dockerfile` | Run `alembic upgrade head` before starting new versions |
+
+Production checklist:
+
+- [ ] `ENVIRONMENT=production`, a random `SECRET_KEY` (≥ 32 chars), `DEBUG=False`
+- [ ] `TRUST_PROXY_HEADERS=true` when behind a load balancer / PaaS proxy
+- [ ] `BACKEND_CORS_ORIGINS` set to your real web origins (if you ship a web client)
+- [ ] `WHATSAPP_WEBHOOK_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `EMAIL_WEBHOOK_SECRET` if those channels are used
+- [ ] `SMTP_*` so password-reset emails are delivered
+- [ ] `ALLOW_STAFF_SELF_REGISTRATION` **not** set
+- [ ] Serve the API over **HTTPS**. Android release builds block plain `http`
+- [ ] Build the app with `EXPO_PUBLIC_API_URL=https://your-api…`
+
+---
+
+## 11. Security model
+
+- **Tenant isolation:** every query is scoped to the caller's workspace (`tenant_id`).
+- **Roles:**
+  - `customer`: own tickets only, cannot post internal notes or change staff-only ticket fields.
+  - `agent`: workspace operations.
+  - `admin`: everything, including roles and admin invites.
+- **Sign-up:** self-registration is customer-only in existing workspaces. Staff join by invitation.
+- **Message sender:** derived from the logged-in role, so customers can't post as "agent".
+- **Passwords:** Argon2id, hashed in a worker thread so the API stays responsive.
+- **Tokens:**
+  - Access tokens last 1 hour.
+  - Refresh tokens rotate on every use. Reusing an old refresh token revokes all of that user's sessions.
+  - Logout and password reset revoke refresh tokens.
+  - The app makes only one refresh call at a time, so a race can't trigger that revocation by accident.
+- **Rate limits:** on login, register, password reset, webhooks and web-chat init.
+- **Webhooks:**
+  - Signatures are checked with constant-time comparison.
+  - Mailgun signatures expire after 5 minutes and each token is accepted only once.
+- **On the device:** tokens are kept in secure storage. Logout clears cached tickets and the offline queue, so the next user on that phone sees nothing from the previous one.
+
+---
+
+## 12. Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| App on phone: login spins then fails / "Network request failed" | Set `EXPO_PUBLIC_API_URL` to your PC's LAN IP (section 5.1), restart Expo, make sure phone and PC share Wi‑Fi |
+| Phone can't reach the API or Expo at all | Windows Firewall: allow ports **8000** and **8081** on private networks (or allow Python/Node when Windows asks) |
+| `failed to connect to the docker API` | Start **Docker Desktop** and wait until it says "running" |
+| API error `relation "…" does not exist` / `column … does not exist` | Run `alembic upgrade head` in `backend/` |
+| API won't start: "SECRET_KEY must be a cryptographically secure key" | You're in production mode. Set a ≥ 32-char `SECRET_KEY`, or use `ENVIRONMENT=development` locally |
+| `Agent and admin accounts require an invitation` | Expected. Invite staff from an admin account, or run `scripts/seed_demo_accounts.py` |
+| Webhook returns 503 | The provider secret isn't set while `ENVIRONMENT=production` |
+| Port 8000 / 8081 already in use | Stop the other process, or run on another port (`--port 8001`, `npx expo start --port 8082`) and update `EXPO_PUBLIC_API_URL` |
+| Expo: "Cannot determine the project's Expo SDK version" | `node_modules` is incomplete. Run `npm install` |
+| Web: signed out after refresh | Expected on web (no secure storage). Phones keep you signed in |
+
+---
+
+## 13. Known limitations
+
+- **Webhook secrets are global**, not per workspace. Per-tenant secrets need a DB table and admin UI.
+- **Mailgun replay protection is in-process memory.** Running several API instances needs a shared store such as Redis.
+- **The AI provider defaults to `mock`.** Responses are simulated until a real provider/key is configured. The in-app AI chat screen is also a local demo.
+- **Some screens show demo data** from `src/data/mockData.js` until the backend returns real data.
+- **`npm audit`** reports moderate issues in `glob`/`minimatch`. They are used only by Expo's build tooling on the developer machine and are not shipped in the app. `npm audit fix --force` would break Expo, so they are left until Expo updates them.
+- **There are no automated frontend tests yet.**
+
+For module-by-module implementation notes, see [`IMPLEMENTATION_STATUS.md`](IMPLEMENTATION_STATUS.md).

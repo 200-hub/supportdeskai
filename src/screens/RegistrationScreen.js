@@ -101,11 +101,7 @@ export const RegistrationScreen = ({
       })
       .catch(() => {
         setLoading(false);
-        onRegisterSuccess({
-          name: fullName.trim(),
-          email: email.trim(),
-          role: 'customer',
-        });
+        Alert.alert('Registration Failed', 'Something went wrong. Please try again.');
       });
   };
 

@@ -105,7 +105,6 @@ async def ensure_default_knowledge_data(db: AsyncSession, tenant_id: str):
     if not res_articles.scalars().first():
         for a_data in DEFAULT_ARTICLES:
             art = KnowledgeArticle(
-                id=a_data["id"],
                 tenant_id=tenant_id,
                 title=a_data["title"],
                 category=a_data["category"],
