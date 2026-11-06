@@ -90,24 +90,35 @@ class Settings(BaseSettings):
     @property
     def sync_database_uri(self) -> str:
         """
-        Synchronous PostgreSQL URI for Alembic migrations and sync engines.
+        Synchronous database URI for Alembic migrations and sync engines.
+        Supports PostgreSQL (psycopg2) and SQLite.
         """
         if self.DATABASE_URL:
-            # Normalize to sync driver if necessary
-            if self.DATABASE_URL.startswith("postgresql+asyncpg://"):
-                return self.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql+psycopg2://")
-            return self.DATABASE_URL
+            url = self.DATABASE_URL
+            # Normalize async PostgreSQL to sync driver
+            if url.startswith("postgresql+asyncpg://"):
+                return url.replace("postgresql+asyncpg://", "postgresql+psycopg2://")
+            # Normalize async SQLite to sync driver
+            if url.startswith("sqlite+aiosqlite://"):
+                return url.replace("sqlite+aiosqlite://", "sqlite://")
+            return url
         return f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     @property
     def async_database_uri(self) -> str:
         """
-        Asynchronous PostgreSQL URI for FastAPI SQLAlchemy async engine.
+        Asynchronous database URI for FastAPI SQLAlchemy async engine.
+        Supports PostgreSQL (asyncpg) and SQLite (aiosqlite).
         """
         if self.DATABASE_URL:
-            if self.DATABASE_URL.startswith("postgresql://"):
-                return self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-            return self.DATABASE_URL
+            url = self.DATABASE_URL
+            # Normalize plain postgresql:// to asyncpg driver
+            if url.startswith("postgresql://"):
+                return url.replace("postgresql://", "postgresql+asyncpg://")
+            # Normalize sync SQLite to async driver
+            if url.startswith("sqlite://"):
+                return url.replace("sqlite://", "sqlite+aiosqlite://")
+            return url
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
 

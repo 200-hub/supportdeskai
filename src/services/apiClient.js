@@ -3,13 +3,15 @@ import { Platform } from 'react-native';
 
 // Default development host for Android emulator vs Web/iOS vs Cloud
 const getDefaultBaseUrl = () => {
+  // 1. Prefer explicit env override (set in .env.local for physical device testing)
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
-  // Android emulator accesses host machine at 10.0.2.2; iOS / Web use localhost
+  // 2. Android emulator: host machine is reachable at 10.0.2.2
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:8000';
   }
+  // 3. Web browser or iOS Simulator on same machine
   return 'http://localhost:8000';
 };
 

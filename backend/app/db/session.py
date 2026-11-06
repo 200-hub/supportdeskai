@@ -9,6 +9,9 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
 
+# Detect if we're using SQLite (no pool_pre_ping, needs check_same_thread=False)
+_is_sqlite = settings.async_database_uri.startswith("sqlite")
+
 # ------------------------------------------------------------------------------
 # Async Database Engine & Session (Primary for FastAPI async endpoints)
 # ------------------------------------------------------------------------------
@@ -16,7 +19,7 @@ async_engine = create_async_engine(
     settings.async_database_uri,
     echo=settings.DEBUG,
     future=True,
-    pool_pre_ping=True,
+    **({"connect_args": {"check_same_thread": False}} if _is_sqlite else {"pool_pre_ping": True}),
 )
 
 AsyncSessionLocal = async_sessionmaker(
@@ -43,11 +46,12 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
 # ------------------------------------------------------------------------------
 # Sync Database Engine & Session (For Alembic, scripts, or sync tasks)
 # ------------------------------------------------------------------------------
+_sync_sqlite = settings.sync_database_uri.startswith("sqlite")
 engine = create_engine(
     settings.sync_database_uri,
     echo=settings.DEBUG,
     future=True,
-    pool_pre_ping=True,
+    **({"connect_args": {"check_same_thread": False}} if _sync_sqlite else {"pool_pre_ping": True}),
 )
 
 SessionLocal = sessionmaker(
