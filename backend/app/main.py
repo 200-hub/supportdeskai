@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
+import asyncio
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request, status
@@ -18,9 +20,26 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Application lifespan context manager for startup and shutdown events.
     """
-    # Startup actions (e.g. database pool pre-ping, connection verification)
+    if settings.async_database_uri.startswith("sqlite"):
+        # Local SQLite dev DB: create/upgrade tables and the tenant the app logs into,
+        # so a fresh checkout works without Postgres or a manual `alembic upgrade head`.
+        await asyncio.to_thread(_migrate_to_head)
+        from app.db.session import AsyncSessionLocal
+        from app.services.auth import get_or_create_tenant
+        async with AsyncSessionLocal() as db:
+            await get_or_create_tenant(db, slug="default-tenant")
     yield
     # Shutdown actions (e.g. closing database engines, connection pools)
+
+
+def _migrate_to_head() -> None:
+    from alembic import command
+    from alembic.config import Config
+
+    # No ini file on purpose: alembic's fileConfig would replace uvicorn's logging.
+    cfg = Config()
+    cfg.set_main_option("script_location", str(Path(__file__).resolve().parent.parent / "alembic"))
+    command.upgrade(cfg, "head")
 
 
 app = FastAPI(

@@ -375,3 +375,15 @@ def test_production_secret_key_validation():
             Settings()
         assert "SECRET_KEY" in str(exc_info.value)
 
+
+
+def test_production_blocks_staff_self_registration_in_existing_workspace(db_client, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    founder = {"email": "founder@prod-ws.io", "name": "Founder", "password": "FounderPass123!",
+               "role": "admin", "tenant_slug": "prod-ws"}
+    assert db_client.post("/api/v1/auth/register", json=founder).status_code == 201
+    intruder = {**founder, "email": "intruder@prod-ws.io", "name": "Intruder"}
+    assert db_client.post("/api/v1/auth/register", json=intruder).status_code == 403
+    customer = {**intruder, "role": "customer"}
+    assert db_client.post("/api/v1/auth/register", json=customer).status_code == 201

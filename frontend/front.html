@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SupportDesk AI chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ground: #F3E6D7;
+      --paper: #FFFAF3;
+      --ink: #1F1A2B;
+      --ink-muted: #5F566B;
+      --ink-faint: #766C80;
+      --rule: #E4D3BF;
+      --rule-strong: #CDB79E;
+      --violet: #9B7ED6;
+      --violet-ink: #4A3290;
+      --violet-wash: #E8DFF7;
+      --lemon: #E4FF3B;
+      --lemon-pressed: #D2EC2A;
+      --error: #B3261E;
+      --success: #23613F;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ::selection { background: var(--violet-wash); color: var(--ink); }
+    body {
+      font-family: "Schibsted Grotesk", system-ui, sans-serif;
+      background: var(--ground);
+      color: var(--ink);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+    }
+
+    .widget {
+      width: 100%;
+      max-width: 400px;
+      height: min(640px, calc(100vh - 32px));
+      background: var(--paper);
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(58, 42, 18, 0.12), 0 12px 32px rgba(58, 42, 18, 0.10);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .head {
+      background: var(--violet);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .head h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+    .head p { font-size: 13px; color: var(--ink); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-faint); }
+    .dot.on { background: var(--success); }
+
+    .log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--rule-strong) transparent;
+    }
+    .msg { max-width: 86%; }
+    .msg .meta { font-size: 11px; font-weight: 600; color: var(--ink-faint); margin-bottom: 4px; display: flex; gap: 8px; }
+    .msg .meta b { color: var(--ink); font-weight: 600; }
+    .msg .body { font-size: 15px; line-height: 1.45; padding: 10px 14px; border-radius: 16px; overflow-wrap: anywhere; }
+    .msg.bot { align-self: flex-start; }
+    .msg.bot .body { background: var(--violet-wash); border-bottom-left-radius: 3px; }
+    .msg.user { align-self: flex-end; }
+    .msg.user .meta { justify-content: flex-end; }
+    .msg.user .body { background: var(--violet-ink); color: var(--paper); border-bottom-right-radius: 3px; }
+    .msg.error .body { background: var(--paper); border: 1px solid var(--error); color: var(--error); }
+
+    .compose {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid var(--rule);
+    }
+    .compose label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .compose input {
+      flex: 1;
+      min-height: 48px;
+      font: inherit;
+      font-size: 15px;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--rule-strong);
+      border-radius: 10px;
+      padding: 0 14px;
+      caret-color: var(--violet-ink);
+    }
+    .compose input::placeholder { color: var(--ink-faint); }
+    .compose input:focus { outline: none; border-color: var(--violet-ink); box-shadow: inset 0 0 0 1px var(--violet-ink); }
+    .compose button {
+      min-height: 48px;
+      padding: 0 20px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      background: var(--lemon);
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 150ms ease-out;
+    }
+    .compose button:hover { background: var(--lemon-pressed); }
+    .compose button:focus-visible { outline: 2px solid var(--violet-ink); outline-offset: 2px; }
+    .compose button:disabled { background: var(--rule); color: var(--ink-faint); cursor: default; }
+  </style>
+</head>
+<body>
+  <main class="widget" aria-label="Support chat">
+    <header class="head">
+      <div>
+        <h1>Support assistant</h1>
+        <p><span class="dot" id="statusDot"></span><span id="statusText">Connecting</span></p>
+      </div>
+    </header>
+
+    <div class="log" id="log" role="log" aria-live="polite">
+      <div class="msg bot">
+        <div class="meta"><b>Assistant</b></div>
+        <div class="body">Hi, I'm an AI assistant, not a person. Ask a question or describe the problem and I'll answer from this team's help articles.</div>
+      </div>
+    </div>
+
+    <form class="compose" id="compose">
+      <label for="chatInput">Message</label>
+      <input id="chatInput" autocomplete="off" placeholder="Type your question">
+      <button type="submit" id="sendBtn">Send</button>
+    </form>
+  </main>
+
+  <script>
+    // Served by the backend → same origin. Opened as a file or from another port → backend on :8000 of the same host.
+    const API_BASE = location.port === '8000' ? '' : `http://${location.hostname || 'localhost'}:8000`;
+    const TENANT = new URLSearchParams(location.search).get('workspace') || 'default-tenant';
+    let visitorToken = null;
+
+    const log = document.getElementById('log');
+    const input = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    function setStatus(online) {
+      document.getElementById('statusDot').classList.toggle('on', online);
+      document.getElementById('statusText').textContent = online ? 'AI assistant, online' : 'Offline. Messages can’t be sent right now.';
+    }
+
+    async function initSession() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/public/chat/init`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenant_slug: TENANT, visitor_name: 'Website visitor' }),
+        });
+        if (!res.ok) throw new Error(res.status);
+        visitorToken = (await res.json()).visitor_token;
+        setStatus(true);
+      } catch (e) {
+        setStatus(false);
+      }
+    }
+
+    function append(text, kind) {
+      const msg = document.createElement('div');
+      msg.className = `msg ${kind}`;
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      if (kind !== 'user') {
+        const who = document.createElement('b');
+        who.textContent = 'Assistant';
+        meta.appendChild(who);
+      }
+      const time = document.createElement('span');
+      time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      meta.appendChild(time);
+      const body = document.createElement('div');
+      body.className = 'body';
+      body.textContent = text;
+      msg.append(meta, body);
+      log.appendChild(msg);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    document.getElementById('compose').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      append(text, 'user');
+      input.value = '';
+      sendBtn.disabled = true;
+      try {
+        if (!visitorToken) await initSession();
+        const res = await fetch(`${API_BASE}/api/v1/public/chat/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${visitorToken}` },
+          body: JSON.stringify({ query: text }),
+        });
+        if (!res.ok) throw new Error(res.status);
+        append((await res.json()).response, 'bot');
+      } catch (err) {
+        append('Your message wasn’t delivered: the support server couldn’t be reached. Try again in a moment.', 'error');
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    });
+
+    initSession();
+  </script>
+</body>
+</html>

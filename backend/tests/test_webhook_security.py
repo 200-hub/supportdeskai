@@ -538,3 +538,51 @@ def _get_token(db_client, email: str, tenant_slug: str) -> str:
         json={"email": email, "password": "Password123!", "tenant_slug": tenant_slug},
     )
     return res.json().get("access_token", "")
+
+
+# ---------------------------------------------------------------------------
+# Web chat visitor messages (POST /public/chat/message)
+# ---------------------------------------------------------------------------
+
+def test_webchat_visitor_message_flow(db_client):
+    _ensure_tenant(db_client, "wc-msg-tenant", "wc.msg@test.io")
+    init = db_client.post(
+        "/api/v1/public/chat/init",
+        json={"tenant_slug": "wc-msg-tenant", "visitor_name": "Visitor"},
+    )
+    assert init.status_code == 200
+    visitor_token = init.json()["visitor_token"]
+
+    # The visitor token is not a user token, so the agent endpoint rejects it
+    assert db_client.post(
+        "/api/v1/ai/chat", json={"query": "hello"},
+        headers={"Authorization": f"Bearer {visitor_token}"},
+    ).status_code == 401
+
+    ok = db_client.post(
+        "/api/v1/public/chat/message", json={"query": "How do I reset my password?"},
+        headers={"Authorization": f"Bearer {visitor_token}"},
+    )
+    assert ok.status_code == 200
+    assert ok.json()["response"]
+
+    assert db_client.post("/api/v1/public/chat/message", json={"query": "hi"}).status_code == 401
+
+    user_token = _get_token(db_client, "wc.msg@test.io", "wc-msg-tenant")
+    assert db_client.post(
+        "/api/v1/public/chat/message", json={"query": "hi"},
+        headers={"Authorization": f"Bearer {user_token}"},
+    ).status_code == 401
+
+
+def test_webchat_visitor_message_rate_limited(db_client):
+    _ensure_tenant(db_client, "wc-msg-rl", "wc.msgrl@test.io")
+    token = db_client.post(
+        "/api/v1/public/chat/init", json={"tenant_slug": "wc-msg-rl"}
+    ).json()["visitor_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    for i in range(30):
+        res = db_client.post("/api/v1/public/chat/message", json={"query": f"q{i}"}, headers=headers)
+        assert res.status_code == 200, f"failed early on message {i + 1}"
+    res = db_client.post("/api/v1/public/chat/message", json={"query": "one too many"}, headers=headers)
+    assert res.status_code == 429
