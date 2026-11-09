@@ -100,7 +100,7 @@ async def generate_ai_chat_response(
             "To assist you further, please provide your account details or let me open a support ticket "
             "for our Tier 2 engineering team to investigate immediately."
         )
-        confidence = "85%"
+        confidence = "20%"  # nothing matched: below the 85% hand-off threshold
         action = "Escalate inquiry to Tier 2 support engineer"
 
     return AIChatResponse(

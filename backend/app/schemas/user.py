@@ -34,6 +34,7 @@ class UserResponse(UserBase):
     tenant_id: str
     avatar_initials: str
     is_active: bool
+    presence: str = "offline"
     team_id: Optional[str] = None
     skills_json: Optional[str] = "[]"
     created_at: datetime

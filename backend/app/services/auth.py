@@ -98,6 +98,18 @@ async def register_user(db: AsyncSession, user_data: UserCreate) -> TokenRespons
             detail="A user with this email address already exists in this workspace"
         )
 
+    # In production, self-registration may only claim a staff role for an empty workspace
+    # (its founder); everyone else signs up as a customer and staff join through invitations.
+    # ponytail: dev/test keep open staff sign-up for demo accounts and the existing test helpers.
+    role = user_data.role or UserRole.CUSTOMER
+    if role != UserRole.CUSTOMER and settings.ENVIRONMENT.lower() == "production":
+        has_users = await db.execute(select(User.id).where(User.tenant_id == tenant.id).limit(1))
+        if has_users.scalar_one_or_none() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Staff accounts in an existing workspace are created by invitation",
+            )
+
     hashed_pw = hash_password(user_data.password)
     initials = extract_initials(user_data.name)
 
@@ -106,7 +118,7 @@ async def register_user(db: AsyncSession, user_data: UserCreate) -> TokenRespons
         email=user_data.email.lower().strip(),
         hashed_password=hashed_pw,
         name=user_data.name.strip(),
-        role=user_data.role or UserRole.CUSTOMER,
+        role=role,
         phone=user_data.phone,
         company=user_data.company,
         avatar_initials=initials,

@@ -83,7 +83,8 @@ class Settings(BaseSettings):
             # Normalize to sync driver if necessary
             if self.DATABASE_URL.startswith("postgresql+asyncpg://"):
                 return self.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql+psycopg2://")
-            return self.DATABASE_URL
+            # Alembic and the sync engine need the sync SQLite driver
+            return self.DATABASE_URL.replace("sqlite+aiosqlite://", "sqlite://")
         return f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     @property
@@ -94,6 +95,8 @@ class Settings(BaseSettings):
         if self.DATABASE_URL:
             if self.DATABASE_URL.startswith("postgresql://"):
                 return self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+            if self.DATABASE_URL.startswith("sqlite://"):
+                return self.DATABASE_URL.replace("sqlite://", "sqlite+aiosqlite://")
             return self.DATABASE_URL
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 

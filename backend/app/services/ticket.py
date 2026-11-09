@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm.attributes import set_committed_value
 
 from app.models.team import Team
 from app.models.ticket import (
@@ -19,6 +20,20 @@ from app.models.ticket import (
 )
 from app.models.user import User, UserRole
 from app.schemas.ticket import TicketCreate, TicketUpdate, TicketMessageCreate
+
+
+def _hide_internal_notes(ticket: Ticket, current_user: User) -> None:
+    """
+    Strip internal notes from a customer's view of the ticket.
+    set_committed_value changes only the loaded view: assigning ticket.messages
+    directly would make delete-orphan cascade DELETE the notes on the next commit.
+    """
+    if current_user.role == UserRole.CUSTOMER and ticket.messages:
+        set_committed_value(
+            ticket,
+            "messages",
+            [m for m in ticket.messages if m.sender_type != MessageSenderType.INTERNAL_NOTE],
+        )
 
 
 async def create_ticket(
@@ -173,6 +188,8 @@ async def list_tickets(
 
     result = await db.execute(query)
     tickets = result.scalars().all()
+    for t in tickets:
+        _hide_internal_notes(t, current_user)
 
     return list(tickets), total
 
@@ -213,10 +230,7 @@ async def get_ticket(
         )
 
     # Customers must never see internal notes in conversation thread
-    if current_user.role == UserRole.CUSTOMER and ticket.messages:
-        ticket.messages = [
-            m for m in ticket.messages if m.sender_type != MessageSenderType.INTERNAL_NOTE
-        ]
+    _hide_internal_notes(ticket, current_user)
 
     return ticket
 
@@ -393,10 +407,7 @@ async def update_ticket(
     )
     result = await db.execute(query)
     updated_ticket = result.scalar_one()
-    if current_user.role == UserRole.CUSTOMER and updated_ticket.messages:
-        updated_ticket.messages = [
-            m for m in updated_ticket.messages if m.sender_type != MessageSenderType.INTERNAL_NOTE
-        ]
+    _hide_internal_notes(updated_ticket, current_user)
     return updated_ticket
 
 
@@ -422,6 +433,9 @@ async def add_ticket_message(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Customers cannot post internal notes"
         )
+    if current_user.role == UserRole.CUSTOMER:
+        # A customer must not be able to post as "agent"/"assistant"
+        sender_type = MessageSenderType.CUSTOMER
 
     msg = TicketMessage(
         ticket_id=ticket.id,

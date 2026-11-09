@@ -1,0 +1,643 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-09T08:51:53+00:00",
+  "title": "Design System: SupportDesk AI",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Porcelain Beige",
+        "canonical": "#F3E6D7",
+        "oklch": "oklch(93.1% 0.025 71.5)",
+        "tonalRamp": [
+          "#0D0B08",
+          "#28231D",
+          "#453E36",
+          "#655C51",
+          "#8A7E71",
+          "#ADA397",
+          "#D1C9BF",
+          "#F4EDE6"
+        ]
+      },
+      "ground-deep": {
+        "role": "neutral",
+        "displayName": "Ground Deep",
+        "canonical": "#E9D8C4",
+        "oklch": "oklch(89.1% 0.033 71.9)",
+        "tonalRamp": [
+          "#0E0A07",
+          "#29231B",
+          "#473E33",
+          "#685B4D",
+          "#8D7D6B",
+          "#B0A292",
+          "#D4C9BC",
+          "#F6EDE3"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Card Stock",
+        "canonical": "#FFFAF3",
+        "oklch": "oklch(98.7% 0.011 76.6)",
+        "tonalRamp": [
+          "#0C0B0A",
+          "#262421",
+          "#423F3C",
+          "#605D58",
+          "#847F79",
+          "#A8A49E",
+          "#CDCAC5",
+          "#F0EEEB"
+        ]
+      },
+      "paper-pressed": {
+        "role": "neutral",
+        "displayName": "Paper Pressed",
+        "canonical": "#F8EFE3",
+        "oklch": "oklch(95.6% 0.019 75.3)",
+        "tonalRamp": [
+          "#0D0B08",
+          "#27231F",
+          "#443F38",
+          "#635D54",
+          "#877F74",
+          "#AAA39A",
+          "#CFCAC2",
+          "#F2EEE8"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1F1A2B",
+        "oklch": "oklch(23.2% 0.033 297.3)",
+        "tonalRamp": [
+          "#0C0A0F",
+          "#25222B",
+          "#413D4A",
+          "#5F5B6C",
+          "#827C92",
+          "#A6A1B4",
+          "#CCC8D7",
+          "#EFECF8"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#5F566B",
+        "oklch": "oklch(47.0% 0.035 304.5)",
+        "tonalRamp": [
+          "#0C0A0F",
+          "#26222B",
+          "#423D4A",
+          "#615A6B",
+          "#857B92",
+          "#A9A0B4",
+          "#CEC7D7",
+          "#F1ECF8"
+        ]
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Ink Faint",
+        "canonical": "#766C80",
+        "oklch": "oklch(54.7% 0.033 307.8)",
+        "tonalRamp": [
+          "#0C0A0F",
+          "#26222A",
+          "#433D49",
+          "#625A6A",
+          "#867B90",
+          "#A9A0B2",
+          "#CEC7D6",
+          "#F1ECF7"
+        ]
+      },
+      "on-dark": {
+        "role": "neutral",
+        "displayName": "On Dark",
+        "canonical": "#FFFAF3",
+        "oklch": "oklch(98.7% 0.011 76.6)",
+        "tonalRamp": [
+          "#0C0B0A",
+          "#262421",
+          "#423F3C",
+          "#605D58",
+          "#847F79",
+          "#A8A49E",
+          "#CDCAC5",
+          "#F0EEEB"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "#E4D3BF",
+        "oklch": "oklch(87.5% 0.033 71.9)",
+        "tonalRamp": [
+          "#0E0A07",
+          "#29231B",
+          "#473E33",
+          "#685B4D",
+          "#8D7D6B",
+          "#B0A292",
+          "#D4C9BB",
+          "#F6EDE3"
+        ]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Rule Strong",
+        "canonical": "#CDB79E",
+        "oklch": "oklch(79.2% 0.043 70.7)",
+        "tonalRamp": [
+          "#0F0A05",
+          "#2B2218",
+          "#4A3D2F",
+          "#6B5A48",
+          "#917C65",
+          "#B3A18D",
+          "#D7C8B7",
+          "#F8ECE0"
+        ]
+      },
+      "violet": {
+        "role": "secondary",
+        "displayName": "Heather Purple",
+        "canonical": "#9B7ED6",
+        "oklch": "oklch(65.6% 0.131 297.9)",
+        "tonalRamp": [
+          "#0E071B",
+          "#281B40",
+          "#463468",
+          "#664E93",
+          "#8A6DC3",
+          "#AD95E0",
+          "#D1BFFC",
+          "#F3E6FF"
+        ]
+      },
+      "violet-ink": {
+        "role": "secondary",
+        "displayName": "Violet Ink",
+        "canonical": "#4A3290",
+        "oklch": "oklch(40.1% 0.148 289.8)",
+        "tonalRamp": [
+          "#0B061E",
+          "#241C45",
+          "#403470",
+          "#5E4F9D",
+          "#806ED1",
+          "#A397EC",
+          "#C9C0FF",
+          "#EDE7FF"
+        ]
+      },
+      "violet-wash": {
+        "role": "secondary",
+        "displayName": "Violet Wash",
+        "canonical": "#E8DFF7",
+        "oklch": "oklch(91.8% 0.034 302.7)",
+        "tonalRamp": [
+          "#0C0A0F",
+          "#26222B",
+          "#423D4A",
+          "#615A6B",
+          "#847C91",
+          "#A8A1B4",
+          "#CDC7D7",
+          "#F0ECF8"
+        ]
+      },
+      "violet-wash-pressed": {
+        "role": "secondary",
+        "displayName": "Violet Wash Pressed",
+        "canonical": "#DACDF2",
+        "oklch": "oklch(87.0% 0.052 301.3)",
+        "tonalRamp": [
+          "#0C0911",
+          "#26212F",
+          "#433B50",
+          "#625873",
+          "#85799B",
+          "#A99FBC",
+          "#CEC6DE",
+          "#F1EBFE"
+        ]
+      },
+      "lemon": {
+        "role": "primary",
+        "displayName": "Electric Lemon",
+        "canonical": "#E4FF3B",
+        "oklch": "oklch(94.9% 0.205 117.6)",
+        "tonalRamp": [
+          "#0A0E00",
+          "#212900",
+          "#3C4700",
+          "#586700",
+          "#798D00",
+          "#9DB100",
+          "#C3D66A",
+          "#E9F8A9"
+        ]
+      },
+      "lemon-pressed": {
+        "role": "primary",
+        "displayName": "Lemon Pressed",
+        "canonical": "#D2EC2A",
+        "oklch": "oklch(89.4% 0.198 117.7)",
+        "tonalRamp": [
+          "#0A0E00",
+          "#212900",
+          "#3B4700",
+          "#586700",
+          "#798D00",
+          "#9DB107",
+          "#C3D66E",
+          "#E8F8AC"
+        ]
+      },
+      "lemon-wash": {
+        "role": "primary",
+        "displayName": "Lemon Wash",
+        "canonical": "#F5FFC4",
+        "oklch": "oklch(97.8% 0.076 115.6)",
+        "tonalRamp": [
+          "#0B0C02",
+          "#23260F",
+          "#3E4322",
+          "#5C6237",
+          "#7E8650",
+          "#A2AA7C",
+          "#C9CFAA",
+          "#EDF2D6"
+        ]
+      },
+      "lemon-ink": {
+        "role": "primary",
+        "displayName": "Lemon Ink",
+        "canonical": "#3F4700",
+        "oklch": "oklch(37.7% 0.087 116.8)",
+        "tonalRamp": [
+          "#0A0D01",
+          "#23270C",
+          "#3E441D",
+          "#5B6331",
+          "#7D8748",
+          "#A1AB76",
+          "#C7D0A5",
+          "#ECF3D2"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Success",
+        "canonical": "#23613F",
+        "oklch": "oklch(44.3% 0.085 156.2)",
+        "tonalRamp": [
+          "#020F06",
+          "#102A1B",
+          "#234933",
+          "#396A4D",
+          "#53906B",
+          "#80B292",
+          "#ADD6BB",
+          "#D9F8E3"
+        ]
+      },
+      "success-wash": {
+        "role": "tertiary",
+        "displayName": "Success Wash",
+        "canonical": "#DCEBD9",
+        "oklch": "oklch(92.4% 0.029 140.5)",
+        "tonalRamp": [
+          "#090C08",
+          "#20261F",
+          "#3A4239",
+          "#576154",
+          "#778575",
+          "#9DA99A",
+          "#C4CEC2",
+          "#EAF1E8"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Warning",
+        "canonical": "#8A5A00",
+        "oklch": "oklch(50.8% 0.108 73.3)",
+        "tonalRamp": [
+          "#140800",
+          "#341F00",
+          "#573908",
+          "#7C5518",
+          "#A7752B",
+          "#C79C63",
+          "#E7C497",
+          "#FFEAC8"
+        ]
+      },
+      "warning-wash": {
+        "role": "tertiary",
+        "displayName": "Warning Wash",
+        "canonical": "#F8E7C2",
+        "oklch": "oklch(93.2% 0.052 86.2)",
+        "tonalRamp": [
+          "#0E0B04",
+          "#2A2315",
+          "#483F2A",
+          "#685C41",
+          "#8E7E5D",
+          "#B1A386",
+          "#D4C9B2",
+          "#F6EEDC"
+        ]
+      },
+      "error": {
+        "role": "tertiary",
+        "displayName": "Error",
+        "canonical": "#B3261E",
+        "oklch": "oklch(50.1% 0.178 28.7)",
+        "tonalRamp": [
+          "#1E0100",
+          "#470A06",
+          "#721C16",
+          "#A13127",
+          "#D64A3D",
+          "#F47C6D",
+          "#FFAC9E",
+          "#FFD9CD"
+        ]
+      },
+      "error-wash": {
+        "role": "tertiary",
+        "displayName": "Error Wash",
+        "canonical": "#F6DAD5",
+        "oklch": "oklch(91.0% 0.032 29.8)",
+        "tonalRamp": [
+          "#0F0A09",
+          "#2C211F",
+          "#4B3C39",
+          "#6C5855",
+          "#927975",
+          "#B59F9B",
+          "#D8C6C2",
+          "#F9EBE8"
+        ]
+      },
+      "error-pressed": {
+        "role": "tertiary",
+        "displayName": "Error Pressed",
+        "canonical": "#97201A",
+        "oklch": "oklch(44.4% 0.156 28.3)",
+        "tonalRamp": [
+          "#1C0201",
+          "#43100C",
+          "#6D241D",
+          "#9A3A31",
+          "#CD5448",
+          "#EB8375",
+          "#FFB1A4",
+          "#FFDCD2"
+        ]
+      },
+      "note-border": {
+        "role": "tertiary",
+        "displayName": "Note Border",
+        "canonical": "#D3E46A",
+        "oklch": "oklch(88.2% 0.148 116.1)",
+        "tonalRamp": [
+          "#0A0D00",
+          "#232800",
+          "#3E4500",
+          "#5B6500",
+          "#7D8A00",
+          "#A1AE4C",
+          "#C7D388",
+          "#EBF5BD"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Welcome headline and single hero lines.",
+        "androidFontFile": "SchibstedGrotesk_800ExtraBold"
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Screen-level headings, greetings.",
+        "androidFontFile": "SchibstedGrotesk_700Bold"
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "App bar, section and sheet titles.",
+        "androidFontFile": "SchibstedGrotesk_700Bold"
+      },
+      "title-small": {
+        "displayName": "Title Small",
+        "purpose": "Ticket subjects, large button labels, list titles.",
+        "androidFontFile": "SchibstedGrotesk_600SemiBold"
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Messages, inputs, descriptions.",
+        "androidFontFile": "SchibstedGrotesk_400Regular"
+      },
+      "body-strong": {
+        "displayName": "Body Strong",
+        "purpose": "Emphasised body copy.",
+        "androidFontFile": "SchibstedGrotesk_500Medium"
+      },
+      "body-small": {
+        "displayName": "Body Small",
+        "purpose": "Card descriptions, helper/error text, dates.",
+        "androidFontFile": "SchibstedGrotesk_400Regular"
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels, buttons, badges, chips.",
+        "androidFontFile": "SchibstedGrotesk_600SemiBold"
+      },
+      "label-small": {
+        "displayName": "Label Small",
+        "purpose": "Nav labels, channel names, chat meta.",
+        "androidFontFile": "SchibstedGrotesk_600SemiBold"
+      },
+      "numeric": {
+        "displayName": "Numeric",
+        "purpose": "Ticket ids, SLA stamp, counts. Proportional figures; no tabular-nums.",
+        "androidFontFile": "SchibstedGrotesk_600SemiBold"
+      }
+    },
+    "shadows": [
+      {
+        "name": "raised",
+        "value": "0 2px 8px rgba(58,42,18,0.12)",
+        "native": {
+          "shadowColor": "#3A2A12",
+          "shadowOffset": {
+            "width": 0,
+            "height": 2
+          },
+          "shadowOpacity": 0.12,
+          "shadowRadius": 8,
+          "elevation": 3
+        },
+        "purpose": "Dialogs, bottom sheets, welcome card fan. Never combined with a border."
+      },
+      {
+        "name": "widget-panel",
+        "value": "0 2px 8px rgba(58,42,18,0.12), 0 12px 32px rgba(58,42,18,0.10)",
+        "purpose": "Web chat widget shell only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "press-swap",
+        "value": "instant",
+        "purpose": "Native pressables swap to their pressed fill with no animation."
+      },
+      {
+        "name": "widget-hover",
+        "value": "background 150ms ease-out",
+        "purpose": "Web widget send button hover."
+      }
+    ],
+    "touchTarget": "48dp"
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Electric Lemon: the one thing to do next on this screen state.",
+      "html": "<button class=\"ds-btn-primary\">Create ticket</button>",
+      "css": ".ds-btn-primary{font-family:'Schibsted Grotesk',system-ui,sans-serif;min-height:48px;padding:0 20px;background:#E4FF3B;color:#1F1A2B;border:0;border-radius:10px;font-size:15px;line-height:20px;font-weight:600;cursor:pointer;transition:background 150ms ease-out}.ds-btn-primary:hover,.ds-btn-primary:active{background:#D2EC2A}.ds-btn-primary:focus-visible{outline:2px solid #4A3290;outline-offset:2px}.ds-btn-primary:disabled{background:#E9D8C4;color:#766C80}"
+    },
+    {
+      "name": "Tonal Button",
+      "kind": "button",
+      "refersTo": "button-tonal",
+      "description": "Violet Wash secondary action.",
+      "html": "<button class=\"ds-btn-tonal\">Ask the assistant</button>",
+      "css": ".ds-btn-tonal{font-family:'Schibsted Grotesk',system-ui,sans-serif;min-height:48px;padding:0 20px;background:#E8DFF7;color:#4A3290;border:0;border-radius:10px;font-size:15px;line-height:20px;font-weight:600;cursor:pointer;transition:background 150ms ease-out}.ds-btn-tonal:hover,.ds-btn-tonal:active{background:#DACDF2}.ds-btn-tonal:focus-visible{outline:2px solid #4A3290;outline-offset:2px}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Neutral alternative with a Rule Strong hairline.",
+      "html": "<button class=\"ds-btn-outline\">Done</button>",
+      "css": ".ds-btn-outline{font-family:'Schibsted Grotesk',system-ui,sans-serif;min-height:48px;padding:0 20px;background:transparent;color:#1F1A2B;border:1px solid #CDB79E;border-radius:10px;font-size:15px;line-height:20px;font-weight:600;cursor:pointer}.ds-btn-outline:hover,.ds-btn-outline:active{background:#E9D8C4}.ds-btn-outline:focus-visible{outline:2px solid #4A3290;outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Card Stock field; focus thickens the outline to 2px Violet Ink.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Subject</span><input class=\"ds-input\" placeholder=\"What went wrong?\"></label>",
+      "css": ".ds-field{font-family:'Schibsted Grotesk',system-ui,sans-serif;display:flex;flex-direction:column;gap:8px}.ds-field-label{font-size:13px;line-height:16px;font-weight:600;color:#1F1A2B}.ds-input{font:inherit;font-size:15px;line-height:22px;min-height:52px;padding:0 12px;background:#FFFAF3;color:#1F1A2B;border:1px solid #CDB79E;border-radius:10px;caret-color:#4A3290}.ds-input::placeholder{color:#766C80}.ds-input:focus{outline:none;border:2px solid #4A3290;padding:0 11px}"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Pill filter; selected goes Violet Wash, an attention count goes lemon.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip ds-chip-on\">All <span class=\"ds-chip-n\">3</span></button><button class=\"ds-chip\">At risk <span class=\"ds-chip-n ds-chip-attn\">2</span></button></div>",
+      "css": ".ds-chips{font-family:'Schibsted Grotesk',system-ui,sans-serif;display:flex;gap:8px}.ds-chip{font:inherit;display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 8px 0 12px;border-radius:9999px;border:1px solid #E4D3BF;background:#FFFAF3;color:#1F1A2B;font-size:13px;font-weight:600;cursor:pointer}.ds-chip:hover{background:#E9D8C4}.ds-chip:focus-visible{outline:2px solid #4A3290;outline-offset:2px}.ds-chip-on{background:#E8DFF7;border-color:#E8DFF7;color:#4A3290}.ds-chip-n{min-width:22px;height:22px;padding:0 4px;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px}.ds-chip-attn{background:#E4FF3B;color:#1F1A2B}"
+    },
+    {
+      "name": "Navigation Bar",
+      "kind": "nav",
+      "refersTo": "nav-bar",
+      "description": "Material 3 bar: violet-wash pill on the active tab, lemon badge for waiting items.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-i\"><span class=\"ds-nav-p\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#5F566B\" stroke-width=\"1.8\"><rect x=\"4\" y=\"7\" width=\"16\" height=\"12\" rx=\"2\"/><path d=\"M6 4h12\"/></svg></span>Queue</a><a class=\"ds-nav-i ds-nav-on\"><span class=\"ds-nav-p\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"#4A3290\"><path d=\"M4 5h16v11H8l-4 4z\"/></svg><b class=\"ds-nav-b\">3</b></span>Inbox</a><a class=\"ds-nav-i\"><span class=\"ds-nav-p\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#5F566B\" stroke-width=\"1.8\"><circle cx=\"12\" cy=\"8\" r=\"4\"/><path d=\"M4 21c1-4 4-6 8-6s7 2 8 6\"/></svg></span>Me</a></nav>",
+      "css": ".ds-nav{font-family:'Schibsted Grotesk',system-ui,sans-serif;display:flex;background:#FFFAF3;border-top:1px solid #E4D3BF;padding:8px 0 12px}.ds-nav-i{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;line-height:14px;font-weight:600;color:#5F566B;cursor:pointer}.ds-nav-i:hover .ds-nav-p{background:#F8EFE3}.ds-nav-on{color:#1F1A2B}.ds-nav-p{position:relative;width:56px;height:32px;border-radius:9999px;display:flex;align-items:center;justify-content:center}.ds-nav-on .ds-nav-p,.ds-nav-on:hover .ds-nav-p{background:#E8DFF7}.ds-nav-b{position:absolute;top:-2px;right:6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#E4FF3B;border:1.5px solid #FFFAF3;color:#1F1A2B;font-size:10px;line-height:12px;display:flex;align-items:center;justify-content:center}"
+    },
+    {
+      "name": "SLA Stamp",
+      "kind": "custom",
+      "refersTo": "sla-stamp-safe",
+      "description": "Rubber date-stamp: double-ruled frame tilted -2.5deg; safe, at-risk, breached, done.",
+      "html": "<div class=\"ds-stamps\"><span class=\"ds-stamp\"><span>Due 2h</span></span><span class=\"ds-stamp ds-stamp-risk\"><span>Due 12m</span></span><span class=\"ds-stamp ds-stamp-breach\"><span>Breached 8m</span></span><span class=\"ds-stamp ds-stamp-done\"><span>Resolved</span></span></div>",
+      "css": ".ds-stamps{font-family:'Schibsted Grotesk',system-ui,sans-serif;display:flex;gap:16px;align-items:center}.ds-stamp{--ink:#4A3290;display:inline-block;border:1.5px solid var(--ink);border-radius:3px;padding:1.5px;transform:rotate(-2.5deg)}.ds-stamp>span{display:block;border:0.75px solid var(--ink);border-radius:1.5px;padding:2px 7px;color:var(--ink);font-size:13px;line-height:16px;font-weight:600}.ds-stamp-risk{--ink:#B3261E;background:#E4FF3B}.ds-stamp-breach{--ink:#B3261E;background:#F6DAD5}.ds-stamp-done{--ink:#766C80}"
+    },
+    {
+      "name": "Ticket Card",
+      "kind": "card",
+      "refersTo": "ticket-card",
+      "description": "Index card: violet header rule, id, channel, SLA stamp, subject, badges.",
+      "html": "<article class=\"ds-card\"><header class=\"ds-card-h\"><b>#SD-1042</b><span class=\"ds-card-ch\">Email</span><span class=\"ds-stamp\"><span>Due 2h</span></span></header><h3>Refund still not in my account</h3><p>I returned the headphones on 2 Nov and the refund has not arrived.</p><footer><span class=\"ds-badge\">Open</span><span class=\"ds-pri\"><i></i>Urgent</span><span class=\"ds-card-d\">Nov 9</span></footer></article>",
+      "css": ".ds-card{font-family:'Schibsted Grotesk',system-ui,sans-serif;max-width:360px;background:#FFFAF3;border:1px solid #E4D3BF;border-radius:12px;padding:0 16px 12px;cursor:pointer}.ds-card:hover,.ds-card:active{background:#F8EFE3}.ds-card:focus-visible{outline:2px solid #4A3290;outline-offset:2px}.ds-card-h{display:flex;align-items:center;min-height:44px;border-bottom:1px solid #9B7ED6;margin-bottom:12px;font-size:13px;line-height:16px;color:#1F1A2B}.ds-card-ch{flex:1;margin-left:12px;font-size:11px;font-weight:600;color:#5F566B}.ds-card h3{margin:0;font-size:16px;line-height:22px;font-weight:600;letter-spacing:-0.1px;color:#1F1A2B}.ds-card p{margin:4px 0 0;font-size:13px;line-height:18px;color:#5F566B}.ds-card footer{display:flex;align-items:center;gap:12px;margin-top:12px;font-size:11px;font-weight:600}.ds-badge{background:#E8DFF7;color:#4A3290;border-radius:6px;padding:2px 7px}.ds-pri{display:flex;align-items:center;gap:6px;color:#9C2A1C}.ds-pri i{width:8px;height:8px;border-radius:2px;background:#B3261E;transform:rotate(45deg)}.ds-card-d{margin-left:auto;font-weight:400;font-size:13px;color:#766C80}.ds-stamp{--ink:#4A3290;display:inline-block;border:1.5px solid var(--ink);border-radius:3px;padding:1.5px;transform:rotate(-2.5deg)}.ds-stamp>span{display:block;border:0.75px solid var(--ink);border-radius:1.5px;padding:1px 5px;color:var(--ink);font-size:11px;line-height:14px;font-weight:600}"
+    },
+    {
+      "name": "Chat Bubbles",
+      "kind": "custom",
+      "refersTo": "bubble-assistant",
+      "description": "Assistant on Violet Wash, customer on Violet Ink, internal note as a lemon slip.",
+      "html": "<div class=\"ds-chat\"><div class=\"ds-msg\"><small>Assistant</small><p class=\"ds-b ds-b-ai\">I answer from this team's help articles.</p></div><div class=\"ds-msg ds-me\"><small>02:17 PM</small><p class=\"ds-b ds-b-out\">How do I reset my password?</p></div><div class=\"ds-note\"><small>Internal note, Priya</small><p>Customer is on the legacy plan.</p></div></div>",
+      "css": ".ds-chat{font-family:'Schibsted Grotesk',system-ui,sans-serif;display:flex;flex-direction:column;gap:16px;max-width:360px}.ds-msg{max-width:86%}.ds-msg small,.ds-note small{display:block;font-size:11px;line-height:14px;font-weight:600;color:#1F1A2B;margin-bottom:4px}.ds-me{align-self:flex-end;text-align:right}.ds-me small{color:#766C80}.ds-b{margin:0;padding:12px 16px;border-radius:16px;font-size:15px;line-height:22px;text-align:left}.ds-b-ai{background:#E8DFF7;color:#1F1A2B;border-bottom-left-radius:3px}.ds-b-out{background:#4A3290;color:#FFFAF3;border-bottom-right-radius:3px}.ds-note{background:#F5FFC4;border:1px solid #D3E46A;border-radius:10px;padding:12px;color:#3F4700}.ds-note small{color:#3F4700}.ds-note p{margin:0;font-size:15px;line-height:22px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Index-Card File",
+    "overview": "SupportDesk AI is a support desk kept like a well-ordered card file on a beige desk. Every ticket is a card of warm card stock with a violet header rule; every SLA clock is a rubber date-stamp pressed slightly off-square; and one Electric Lemon highlighter marks the only places that say \"act here\". The world is paper, ink and stamp, not glass and gradients: surfaces are flat, separated by hairline rules, and the only lift belongs to things that float over the desk (sheets, dialogs, the fanned cards on the welcome screen).\n\nDensity is set for an agent working a queue all shift: 4dp cells, 48dp touch targets, compact labels, and a single family carrying everything from the 34px display line to 11px stamp text. The customer screens use the same vocabulary at a calmer pace, so a stamp reading \"Due 45m\" means the same thing to the customer and to the agent answering them. The system explicitly refuses the navy-and-teal SaaS card kit with gradient stat tiles. It is light only, on the pinned Porcelain Beige ground.\n\nThe embeddable web chat widget (`frontend/front.html`) carries the same palette, family, radii and bubble language as CSS custom properties, so the customer meets the same desk on the web.",
+    "keyCharacteristics": [
+      "Porcelain Beige desk ground, card-stock paper surfaces, hairline rules.",
+      "Violet stamp ink: Heather Purple for fills, icons and rules; Violet Ink for anything that must be read.",
+      "One Electric Lemon highlighter, reserved for the primary action and things waiting on the user.",
+      "Schibsted Grotesk only, proportional figures throughout.",
+      "Elevation is a hairline border or a shadow, never both.",
+      "The SLA stamp is the signature: a double-ruled, tilted rubber stamp with four states."
+    ],
+    "rules": [
+      {
+        "name": "The One Highlighter Rule",
+        "body": "Electric Lemon means \"act here\" and nothing else: the primary action (one per screen state) and things waiting on the user (unread, attention counts, at-risk SLA). It is never decoration, never a brand stripe, never a chart series.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink-Not-Heather Rule",
+        "body": "Heather Purple (#9B7ED6) is never used for text; at 3.2:1 on paper it is fill, icon and rule only. Any violet text uses Violet Ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Schibsted Grotesk is the only typeface, in the app and the web widget. No second display face, no mono.",
+        "section": "typography"
+      },
+      {
+        "name": "The Proportional Figures Rule",
+        "body": "No `tabular-nums` (`fontVariant`/`font-variant-numeric`) anywhere: this face widens punctuation with it. Ids, times and counts use the Numeric role at weight 600 instead.",
+        "section": "typography"
+      },
+      {
+        "name": "The Border-Or-Shadow Rule",
+        "body": "Elevation is declared once per element: a hairline border or a shadow, never both. Cards, chips, inputs and bars use a border; dialogs and sheets use the shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** use Electric Lemon (#E4FF3B) only for the primary action (one per screen state) and things waiting on the user.",
+      "**Do** set violet text in Violet Ink (#4A3290); keep Heather Purple (#9B7ED6) for fills, icons and rules.",
+      "**Do** use Schibsted Grotesk for everything, with each role naming its own weight file on Android.",
+      "**Do** give every element either a 1px Rule border or `ELEVATION.raised`, choosing by whether it sits on the desk or floats above it.",
+      "**Do** show SLA time with the SLA stamp in its four states (safe, at-risk, breached, done).",
+      "**Do** keep spacing on the 4dp grid and touch targets at 48dp or more.",
+      "**Do** take status, priority and channel colours from their fixed triples in `src/theme/colors.js`."
+    ],
+    "donts": [
+      "**Don't** set any text in Heather Purple.",
+      "**Don't** use Electric Lemon as decoration, a brand band or a chart series; analytics bars are Heather Purple.",
+      "**Don't** add a second typeface or a mono face.",
+      "**Don't** turn on `tabular-nums`.",
+      "**Don't** combine a border and a shadow on one element.",
+      "**Don't** use the navy-and-teal SaaS kit or gradient stat tiles.",
+      "**Don't** add a dark theme; the ground is pinned Porcelain Beige."
+    ]
+  }
+}

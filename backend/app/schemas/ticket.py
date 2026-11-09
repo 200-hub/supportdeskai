@@ -12,7 +12,8 @@ class TicketMessageBase(BaseModel):
 
 
 class TicketMessageCreate(TicketMessageBase):
-    pass
+    # None lets the server pick agent/customer from the caller's role
+    sender_type: Optional[MessageSenderType] = None
 
 
 class TicketMessageResponse(TicketMessageBase):

@@ -143,9 +143,48 @@ Security requirements in the specification include:
 
 ## Getting Started
 
-This repository's exact setup commands, package scripts, environment variables, and service configuration depend on the implementation. They are **not specified here**, so they should be documented after the initial codebase and development environment are created.
+The code that exists today lives in two folders:
 
-Before running the full platform, the planned architecture may require:
+- `backend/` — FastAPI API (Python 3.12+). See [backend/README.md](backend/README.md).
+- `frontend/` — Expo / React Native app. Run all `npm` / `npx expo` commands from inside `frontend/`.
+
+### Run on a phone with Expo Go
+
+1. **Start the backend on all interfaces** (not just localhost), so the phone can reach it:
+
+   ```powershell
+   cd backend
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   cp .env.example .env          # local SQLite database; tables are created on startup
+   uvicorn app.main:app --host 0.0.0.0 --port 8000
+   ```
+
+2. **Put the phone on the same Wi-Fi as the PC** (not a guest network, and not mobile data).
+3. **Allow port 8000 through Windows Firewall** (once, in an Administrator PowerShell). Also make sure the Wi-Fi network is set to *Private*:
+
+   ```powershell
+   netsh advfirewall firewall add rule name="SupportDesk API 8000" dir=in action=allow protocol=TCP localport=8000
+   ```
+
+   To check, open `http://<your-PC-LAN-IP>:8000/health` in the phone's browser. Find the IP with `ipconfig`.
+4. **Start the app** in a second terminal and scan the QR code with Expo Go:
+
+   ```powershell
+   cd frontend
+   npm install
+   npx expo start
+   ```
+
+   The app calls the backend at the same LAN IP Expo serves from, on port 8000.
+5. **Tunnel mode or a cloud backend:** `npx expo start --tunnel` can't reach a LAN backend, so set the API URL yourself in `frontend/.env`, then restart Expo:
+
+   ```
+   EXPO_PUBLIC_API_URL=https://your-backend.example.com
+   ```
+
+The full platform described above may later require:
 
 - Node.js 22 for the backend services (as specified in the architecture)
 - A package manager and monorepo tooling configured by the repository

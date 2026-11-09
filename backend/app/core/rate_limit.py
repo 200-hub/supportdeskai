@@ -144,6 +144,7 @@ password_reset_limiter = RateLimiter(requests=5, window_seconds=300, name="auth_
 # Public form submission and webchat init
 form_submit_limiter = RateLimiter(requests=10, window_seconds=60, name="public_form_submit")
 webchat_init_limiter = RateLimiter(requests=20, window_seconds=60, name="public_webchat_init")
+webchat_message_limiter = RateLimiter(requests=30, window_seconds=60, name="public_webchat_message")
 
 # Inbound webhooks — these come from provider infrastructure, be generous
 # but still protect against misconfiguration / replay floods

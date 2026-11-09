@@ -100,7 +100,7 @@ class WebChatVisitorSession(Base, TimestampMixin):
         nullable=False,
         index=True
     )
-    visitor_token: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    visitor_token: Mapped[str] = mapped_column(String(512), unique=True, index=True, nullable=False)
     visitor_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     visitor_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     session_status: Mapped[str] = mapped_column(String(50), default="active", nullable=False)

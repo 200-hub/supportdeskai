@@ -74,7 +74,8 @@ backend/
 
 ### Prerequisites
 * Python 3.12 or compatible version (e.g., Python 3.14)
-* PostgreSQL 16 (local installation or via Docker Compose)
+* Nothing else for local development: `.env.example` uses a SQLite file (`backend/supportdesk.db`), and the tables plus the `default-tenant` workspace are created when the server starts.
+* PostgreSQL 16 only if you want it (local install, cloud, or Docker Compose): set `DATABASE_URL` (or `DATABASE_URL=""` plus the `POSTGRES_*` values) and run `alembic upgrade head` before starting.
 
 ### 3.1 Local Environment Setup
 ```powershell
@@ -106,6 +107,8 @@ The service will be accessible at:
 * **API v1 Health Probe**: `http://localhost:8000/api/v1/health`
 * **Interactive Swagger UI**: `http://localhost:8000/api/v1/docs`
 * **ReDoc Documentation**: `http://localhost:8000/api/v1/redoc`
+
+Keep `--host 0.0.0.0`: with the default `127.0.0.1`, a phone running Expo Go cannot connect. Windows Firewall must also allow inbound TCP 8000 (see "Run on a phone with Expo Go" in the root README).
 
 ---
 
