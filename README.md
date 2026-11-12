@@ -148,6 +148,13 @@ The code that exists today lives in two folders:
 - `backend/` — FastAPI API (Python 3.12+). See [backend/README.md](backend/README.md).
 - `frontend/` — Expo / React Native app. Run all `npm` / `npx expo` commands from inside `frontend/`.
 
+### One-click start (Windows)
+
+Double-click **`Start SupportDesk.bat`**. It starts Docker Desktop if needed, runs the database and API
+in Docker, installs the app's packages on first run, and starts Expo with a QR code for Expo Go. The
+phone must be on the same Wi-Fi. **`Stop SupportDesk.bat`** stops it all; your data is kept.
+You need Docker Desktop and Node.js installed; the launcher opens their download pages if they're missing.
+
 ### Run on a phone with Expo Go
 
 1. **Start the backend on all interfaces** (not just localhost), so the phone can reach it:
