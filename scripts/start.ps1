@@ -55,6 +55,11 @@ if (-not $apiUp) {
 }
 Write-Host 'API is running.' -ForegroundColor Green
 
+# Demo logins (admin / agent / customer). Skips accounts that already exist.
+Step 'Making sure the demo accounts exist'
+docker compose exec -T backend python scripts/seed_demo_accounts.py
+if ($LASTEXITCODE -ne 0) { Write-Host 'Could not create the demo accounts (see above). You can still sign up in the app.' -ForegroundColor Yellow }
+
 # 4. Laptop's Wi-Fi / LAN address -------------------------------------------------------------
 $ip = (Get-NetIPConfiguration |
   Where-Object { $_.IPv4DefaultGateway -and $_.NetAdapter.Status -eq 'Up' } |
@@ -91,6 +96,7 @@ Write-Host ''
 Write-Host '  SupportDesk AI is starting' -ForegroundColor Green
 Write-Host "  Phone (Expo Go):  scan the QR code below, or enter  exp://${ip}:$port"
 Write-Host "  API check:        http://${ip}:8000/health  (open on the phone's browser if the app can't connect)"
+Write-Host '  Demo logins:      admin@demo.com / agent@demo.com / customer@demo.com, password Password123!'
 Write-Host '  In this browser:  press  w  once the QR code appears'
 Write-Host '  Phone and PC must be on the same Wi-Fi. Close this window to stop the app;'
 Write-Host '  run "Stop SupportDesk.bat" to also stop the database and API.'

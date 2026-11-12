@@ -73,7 +73,9 @@ def run_migrations_online() -> None:
             connection.execute(text(
                 "UPDATE alembic_version SET version_num = 'c7d8e9f0a1b2' WHERE version_num = 'c5d6e7f8a9b0'"
             ))
-            connection.commit()
+        # inspect() opens a transaction; close it, or Alembic treats it as an outer transaction
+        # and never commits the migrations.
+        connection.commit()
 
         context.configure(
             connection=connection,
