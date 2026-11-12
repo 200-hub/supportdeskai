@@ -55,6 +55,11 @@ if (-not $apiUp) {
 }
 Write-Host 'API is running.' -ForegroundColor Green
 
+# The container only migrates when it starts; run it again so updated code always gets its tables.
+Step 'Updating the database tables'
+docker compose exec -T backend alembic upgrade head
+if ($LASTEXITCODE -ne 0) { Fail 'The database update failed (see the messages above).' }
+
 # Demo logins (admin / agent / customer). Skips accounts that already exist.
 Step 'Making sure the demo accounts exist'
 docker compose exec -T backend python scripts/seed_demo_accounts.py
