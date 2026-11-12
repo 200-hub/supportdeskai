@@ -108,8 +108,7 @@ async def whatsapp_hub_challenge(
     from fastapi import HTTPException
     from fastapi.responses import PlainTextResponse
 
-    # Meta's Verify Token is a different value from the App Secret used for HMAC.
-    expected_token = settings.WHATSAPP_VERIFY_TOKEN or settings.WHATSAPP_WEBHOOK_SECRET
+    expected_token = settings.WHATSAPP_WEBHOOK_SECRET
     if not expected_token:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -187,12 +186,15 @@ async def email_inbound_webhook(
     * In development/testing, skips verification when the secret is absent.
     """
     await webhook_limiter.check(request)
-    _, payload = await verify_email_signature(request)
-    if payload is None:
+    raw_body = await verify_email_signature(request)
+
+    try:
+        payload: Dict[str, Any] = json.loads(raw_body)
+    except (ValueError, UnicodeDecodeError):
         from fastapi import HTTPException
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Malformed email webhook payload (expected JSON or form data)",
+            detail="Malformed JSON in email webhook payload",
         )
 
     return await channel_service.handle_inbound_email_webhook(

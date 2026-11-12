@@ -9,6 +9,3 @@ npm-debug.*
 *.mobileprovision
 *.orig.*
 .DS_Store
-
-# local env files (e.g. EXPO_PUBLIC_API_URL)
-.env*.local

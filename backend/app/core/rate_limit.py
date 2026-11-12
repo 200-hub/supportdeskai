@@ -69,11 +69,7 @@ def _client_key(request: Request) -> str:
     if trust_proxy:
         xff = request.headers.get("X-Forwarded-For")
         if xff:
-            # Proxies append, so the left entries are client-controlled. Take the
-            # address added by our own proxy chain (TRUSTED_PROXY_HOPS from the right).
-            hops = [h.strip() for h in xff.split(",") if h.strip()]
-            if hops:
-                return hops[-min(max(settings.TRUSTED_PROXY_HOPS, 1), len(hops))]
+            return xff.split(",")[0].strip()
         real_ip = request.headers.get("X-Real-IP")
         if real_ip:
             return real_ip.strip()
@@ -148,6 +144,7 @@ password_reset_limiter = RateLimiter(requests=5, window_seconds=300, name="auth_
 # Public form submission and webchat init
 form_submit_limiter = RateLimiter(requests=10, window_seconds=60, name="public_form_submit")
 webchat_init_limiter = RateLimiter(requests=20, window_seconds=60, name="public_webchat_init")
+webchat_message_limiter = RateLimiter(requests=30, window_seconds=60, name="public_webchat_message")
 
 # Inbound webhooks — these come from provider infrastructure, be generous
 # but still protect against misconfiguration / replay floods

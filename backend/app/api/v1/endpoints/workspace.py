@@ -64,7 +64,6 @@ async def invite_user(
         tenant_id=current_user.tenant_id,
         emails=[invite_in.email],
         role=invite_in.role,
-        actor_role=current_user.role,
     )
 
 
@@ -79,7 +78,6 @@ async def bulk_invite(
         tenant_id=current_user.tenant_id,
         emails=bulk_in.emails,
         role=bulk_in.role,
-        actor_role=current_user.role,
     )
 
 

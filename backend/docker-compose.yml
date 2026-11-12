@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile
     container_name: supportdeskai_backend
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - .:/app
     ports:
@@ -31,6 +31,7 @@ services:
     environment:
       ENVIRONMENT: development
       DEBUG: "True"
+      DATABASE_URL: ""  # override a SQLite URL from a mounted .env; use POSTGRES_*
       POSTGRES_SERVER: db
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-supportdesk}

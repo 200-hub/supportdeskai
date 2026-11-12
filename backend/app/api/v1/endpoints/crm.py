@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_roles
+from app.api.deps import get_current_user, require_roles
 from app.db.session import get_async_db
 from app.models.user import User, UserRole
 from app.schemas.crm import (
@@ -35,7 +35,7 @@ async def create_organization(
 @router.get("/organizations", response_model=List[OrganizationResponse])
 async def list_organizations(
     search: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.AGENT)),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     return await crm_service.list_organizations(
@@ -48,7 +48,7 @@ async def list_organizations(
 @router.get("/organizations/{org_id}", response_model=OrganizationResponse)
 async def get_organization(
     org_id: str,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.AGENT)),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     return await crm_service.get_organization(
@@ -105,7 +105,7 @@ async def create_contact(
 async def list_contacts(
     search: Optional[str] = Query(None),
     organization_id: Optional[str] = Query(None),
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.AGENT)),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     return await crm_service.list_contacts(
@@ -119,7 +119,7 @@ async def list_contacts(
 @router.get("/contacts/{contact_id}", response_model=ContactResponse)
 async def get_contact(
     contact_id: str,
-    current_user: User = Depends(require_roles(UserRole.ADMIN, UserRole.AGENT)),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
 ):
     return await crm_service.get_contact(

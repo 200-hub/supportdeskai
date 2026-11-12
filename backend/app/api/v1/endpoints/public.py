@@ -1,10 +1,17 @@
-from fastapi import APIRouter, Depends, Request, status
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_roles
-from app.core.rate_limit import form_submit_limiter, webchat_init_limiter
+from app.api.deps import require_roles, security_bearer
+from app.core.rate_limit import form_submit_limiter, webchat_init_limiter, webchat_message_limiter
+from app.core.security import decode_access_token
 from app.db.session import get_async_db
+from app.models.channel import WebChatVisitorSession
 from app.models.user import User, UserRole
+from app.schemas.ai import AIChatRequest, AIChatResponse
 from app.schemas.channel import (
     PublicFormCreate,
     PublicFormResponse,
@@ -12,6 +19,7 @@ from app.schemas.channel import (
     WebChatInitRequest,
     WebChatInitResponse,
 )
+from app.services import ai as ai_service
 from app.services import channel as channel_service
 
 router = APIRouter()
@@ -73,4 +81,39 @@ async def init_web_chat(
     return await channel_service.initialize_web_chat(
         db=db,
         request=chat_request,
+    )
+
+
+# Web Chat Visitor Message — authenticated by the visitor token from /chat/init
+@router.post("/chat/message", response_model=AIChatResponse)
+async def web_chat_message(
+    request: Request,
+    chat_request: AIChatRequest,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer),
+    db: AsyncSession = Depends(get_async_db),
+):
+    """
+    Answer a web chat visitor with the tenant's AI assistant.
+    Requires `Authorization: Bearer <visitor_token>`. Rate-limited to 30 messages per 60s per IP.
+    """
+    await webchat_message_limiter.check(request)
+
+    token = credentials.credentials if credentials else None
+    payload = decode_access_token(token) if token else None
+    sub = (payload or {}).get("sub", "")
+    if not payload or payload.get("role") != "visitor" or not sub.startswith("visitor:"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired visitor token")
+
+    res = await db.execute(
+        select(WebChatVisitorSession).where(
+            WebChatVisitorSession.id == sub.removeprefix("visitor:"),
+            WebChatVisitorSession.tenant_id == payload.get("tenant_id"),
+            WebChatVisitorSession.session_status == "active",
+        )
+    )
+    if not res.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Web chat session not found or closed")
+
+    return await ai_service.generate_ai_chat_response(
+        db=db, tenant_id=payload["tenant_id"], request=chat_request
     )

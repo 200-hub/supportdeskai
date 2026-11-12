@@ -7,12 +7,13 @@ from app.schemas.user import UserResponse
 
 class TicketMessageBase(BaseModel):
     content: str = Field(..., min_length=1, max_length=10000)
-    sender_type: Optional[MessageSenderType] = None
+    sender_type: Optional[MessageSenderType] = MessageSenderType.CUSTOMER
     sender_name: Optional[str] = "Anonymous"
 
 
 class TicketMessageCreate(TicketMessageBase):
-    pass
+    # None lets the server pick agent/customer from the caller's role
+    sender_type: Optional[MessageSenderType] = None
 
 
 class TicketMessageResponse(TicketMessageBase):
@@ -61,6 +62,7 @@ class TicketUpdate(BaseModel):
     sla_paused: Optional[bool] = None
     sla_remaining: Optional[str] = None
     sla_status: Optional[str] = None
+    auto_assign: Optional[bool] = None
 
 
 class TicketResponse(TicketBase):

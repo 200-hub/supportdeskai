@@ -1,5 +1,4 @@
 import json
-import logging
 import uuid
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
@@ -7,6 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm.attributes import set_committed_value
 
 from app.models.team import Team
 from app.models.ticket import (
@@ -22,7 +22,19 @@ from app.models.user import User, UserRole
 from app.schemas.ticket import TicketCreate, TicketUpdate, TicketMessageCreate
 
 
-logger = logging.getLogger(__name__)
+def _hide_internal_notes(ticket: Ticket, current_user: User) -> None:
+    """
+    Strip internal notes from a customer's view of the ticket.
+    set_committed_value changes only the loaded view: assigning ticket.messages
+    directly would make delete-orphan cascade DELETE the notes on the next commit.
+    """
+    if current_user.role == UserRole.CUSTOMER and ticket.messages:
+        set_committed_value(
+            ticket,
+            "messages",
+            [m for m in ticket.messages if m.sender_type != MessageSenderType.INTERNAL_NOTE],
+        )
+
 
 async def create_ticket(
     db: AsyncSession,
@@ -36,20 +48,20 @@ async def create_ticket(
     stripped_subject = ticket_in.subject.strip()
     if len(stripped_subject) < 2:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Ticket subject must be at least 2 characters",
         )
     stripped_desc = ticket_in.description.strip()
     if len(stripped_desc) < 2:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Ticket description must be at least 2 characters",
         )
 
     customer_id = current_user.id if current_user else None
     sender_name = current_user.name if current_user else (ticket_in.customer_name or "Customer")
 
-    ticket_id = f"SD-{uuid.uuid4().hex[:12].upper()}"
+    ticket_id = f"SD-{uuid.uuid4().hex[:4].upper()}"
 
     priority = ticket_in.priority or TicketPriority.MEDIUM
     from app.services.sla import get_initial_sla_for_priority
@@ -106,27 +118,7 @@ async def create_ticket(
         if rule_check.scalar_one_or_none():
             await auto_assign_ticket(db, ticket.id, tenant_id)
     except Exception:
-        # Ticket is already committed; drop the failed hook's partial work so
-        # the session stays usable (otherwise later queries raise PendingRollbackError).
-        logger.exception("Auto-assign failed for ticket %s", ticket.id)
-        await db.rollback()
-
-    # Trigger automations for 'ticket_created' event if active rules exist
-    try:
-        from app.models.automation import AutomationRule
-        from app.services.automation import execute_automations_for_event
-        auto_check = await db.execute(
-            select(AutomationRule.id).where(
-                AutomationRule.tenant_id == tenant_id,
-                AutomationRule.trigger_event == "ticket_created",
-                AutomationRule.is_active.is_(True),
-            ).limit(1)
-        )
-        if auto_check.scalar_one_or_none():
-            await execute_automations_for_event(db, tenant_id, ticket.id, "ticket_created")
-    except Exception:
-        logger.exception("ticket_created automations failed for ticket %s", ticket.id)
-        await db.rollback()
+        pass
     query = (
         select(Ticket)
         .where(Ticket.id == ticket.id)
@@ -196,6 +188,8 @@ async def list_tickets(
 
     result = await db.execute(query)
     tickets = result.scalars().all()
+    for t in tickets:
+        _hide_internal_notes(t, current_user)
 
     return list(tickets), total
 
@@ -236,10 +230,7 @@ async def get_ticket(
         )
 
     # Customers must never see internal notes in conversation thread
-    if current_user.role == UserRole.CUSTOMER and ticket.messages:
-        ticket.messages = [
-            m for m in ticket.messages if m.sender_type != MessageSenderType.INTERNAL_NOTE
-        ]
+    _hide_internal_notes(ticket, current_user)
 
     return ticket
 
@@ -263,8 +254,13 @@ async def update_ticket(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Customers may only change status to 'closed'"
             )
-        # Allow-list: anything a customer sends beyond these is staff-only.
-        if update_data.model_fields_set - {"status", "subject", "description"}:
+        if (
+            update_data.priority
+            or update_data.assigned_to_id
+            or update_data.team_id
+            or update_data.sla_paused
+            or update_data.tags_json
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Customers cannot reassign, change priority, or modify internal fields of tickets"
@@ -296,7 +292,7 @@ async def update_ticket(
         _, new_rem = await get_initial_sla_for_priority(db, tenant_id, update_data.priority)
         ticket.sla_remaining = new_rem
 
-    if update_data.assigned_to_id is not None:
+    if "assigned_to_id" in update_data.model_fields_set:
         target_agent_id = update_data.assigned_to_id.strip() if update_data.assigned_to_id else None
         if target_agent_id:
             assignee_res = await db.execute(
@@ -316,7 +312,7 @@ async def update_ticket(
             ticket.assigned_to_id = None
         timeline_notes.append("Ticket re-assigned")
 
-    if update_data.team_id is not None:
+    if "team_id" in update_data.model_fields_set:
         target_team_id = update_data.team_id.strip() if update_data.team_id else None
         if target_team_id:
             team_res = await db.execute(
@@ -340,7 +336,7 @@ async def update_ticket(
         stripped_sub = update_data.subject.strip()
         if len(stripped_sub) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Ticket subject must be at least 2 characters",
             )
         ticket.subject = stripped_sub
@@ -349,7 +345,7 @@ async def update_ticket(
         stripped_desc = update_data.description.strip()
         if len(stripped_desc) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Ticket description must be at least 2 characters",
             )
         ticket.description = stripped_desc
@@ -364,7 +360,7 @@ async def update_ticket(
                 raise ValueError()
         except Exception:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="tags_json must be a valid JSON array string",
             )
         ticket.tags_json = update_data.tags_json
@@ -395,6 +391,10 @@ async def update_ticket(
         db.add(timeline_entry)
 
     await db.commit()
+
+    if update_data.auto_assign is True:
+        from app.services.routing import auto_assign_ticket
+        await auto_assign_ticket(db, ticket.id, tenant_id)
     query = (
         select(Ticket)
         .where(Ticket.id == ticket.id)
@@ -407,10 +407,7 @@ async def update_ticket(
     )
     result = await db.execute(query)
     updated_ticket = result.scalar_one()
-    if current_user.role == UserRole.CUSTOMER and updated_ticket.messages:
-        updated_ticket.messages = [
-            m for m in updated_ticket.messages if m.sender_type != MessageSenderType.INTERNAL_NOTE
-        ]
+    _hide_internal_notes(updated_ticket, current_user)
     return updated_ticket
 
 
@@ -426,20 +423,18 @@ async def add_ticket_message(
     """
     ticket = await get_ticket(db, ticket_id, tenant_id, current_user)
 
-    # Sender type is derived from the caller's role; clients may only pick
-    # note/assistant variants when they are staff.
-    requested = message_in.sender_type
-    if current_user.role in (UserRole.AGENT, UserRole.ADMIN):
-        if requested in (MessageSenderType.INTERNAL_NOTE, MessageSenderType.ASSISTANT):
-            sender_type = requested
-        else:
-            sender_type = MessageSenderType.AGENT
-    else:
-        if requested == MessageSenderType.INTERNAL_NOTE:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Customers cannot post internal notes"
-            )
+    # Validate sender type
+    sender_type = message_in.sender_type or (
+        MessageSenderType.AGENT if current_user.role in [UserRole.AGENT, UserRole.ADMIN] else MessageSenderType.CUSTOMER
+    )
+
+    if sender_type == MessageSenderType.INTERNAL_NOTE and current_user.role == UserRole.CUSTOMER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Customers cannot post internal notes"
+        )
+    if current_user.role == UserRole.CUSTOMER:
+        # A customer must not be able to post as "agent"/"assistant"
         sender_type = MessageSenderType.CUSTOMER
 
     msg = TicketMessage(

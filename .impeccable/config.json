@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "frontend/front.html"
+        ],
+        "createdAt": "2026-11-09T07:56:42.661Z",
+        "reason": "user-supplied palette: Porcelain Beige #F3E6D7 from the user's palette image (2026-11-09)"
+      }
+    ]
+  }
+}

@@ -4,9 +4,7 @@ services:
     name: supportdesk-ai-api
     runtime: python
     rootDir: backend
-    buildCommand: "pip install -r requirements.txt"
-    # Builds can't reach the private database; migrations run just before deploy.
-    preDeployCommand: "alembic upgrade head"
+    buildCommand: "pip install -r requirements.txt && alembic upgrade head"
     startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
@@ -20,8 +18,6 @@ services:
         fromDatabase:
           name: supportdesk-db
           property: connectionString
-      - key: TRUST_PROXY_HEADERS
-        value: true
       - key: AI_PROVIDER
         value: mock
       - key: AI_API_KEY

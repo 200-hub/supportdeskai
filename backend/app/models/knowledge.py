@@ -35,7 +35,7 @@ class KnowledgeArticle(Base, TimestampMixin):
     id: Mapped[str] = mapped_column(
         String(36),
         primary_key=True,
-        default=lambda: f"kb-{uuid.uuid4().hex[:12]}",
+        default=lambda: f"kb-{uuid.uuid4().hex[:6]}",
         index=True
     )
     tenant_id: Mapped[str] = mapped_column(

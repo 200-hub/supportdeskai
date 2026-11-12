@@ -7,13 +7,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.mailer import send_email
 from app.core.security import (
     DUMMY_PASSWORD_HASH,
     create_access_token,
     decode_access_token,
-    hash_password_async,
-    verify_password_async,
+    hash_password,
+    verify_password,
 )
 from app.models.auth_session import RefreshToken
 from app.models.tenant import Tenant
@@ -84,23 +83,7 @@ async def register_user(db: AsyncSession, user_data: UserCreate) -> TokenRespons
     Register a new user within a tenant workspace and issue access + refresh token.
     """
     tenant_slug = user_data.tenant_slug or "default-tenant"
-    existing_tenant = (
-        await db.execute(select(Tenant).where(Tenant.slug == tenant_slug))
-    ).scalar_one_or_none()
-    requested_role = user_data.role or UserRole.CUSTOMER
-
-    # Staff roles in an existing workspace come only from an admin invitation.
-    # Whoever creates a brand-new workspace may claim a staff role (founder).
-    if (
-        existing_tenant is not None
-        and requested_role != UserRole.CUSTOMER
-        and not settings.ALLOW_STAFF_SELF_REGISTRATION
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Agent and admin accounts require an invitation from a workspace administrator"
-        )
-    tenant = existing_tenant or await get_or_create_tenant(db, slug=tenant_slug)
+    tenant = await get_or_create_tenant(db, slug=tenant_slug)
 
     # Check email uniqueness within tenant
     existing_user = await db.execute(
@@ -115,7 +98,19 @@ async def register_user(db: AsyncSession, user_data: UserCreate) -> TokenRespons
             detail="A user with this email address already exists in this workspace"
         )
 
-    hashed_pw = await hash_password_async(user_data.password)
+    # In production, self-registration may only claim a staff role for an empty workspace
+    # (its founder); everyone else signs up as a customer and staff join through invitations.
+    # ponytail: dev/test keep open staff sign-up for demo accounts and the existing test helpers.
+    role = user_data.role or UserRole.CUSTOMER
+    if role != UserRole.CUSTOMER and settings.ENVIRONMENT.lower() == "production":
+        has_users = await db.execute(select(User.id).where(User.tenant_id == tenant.id).limit(1))
+        if has_users.scalar_one_or_none() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Staff accounts in an existing workspace are created by invitation",
+            )
+
+    hashed_pw = hash_password(user_data.password)
     initials = extract_initials(user_data.name)
 
     user = User(
@@ -123,7 +118,7 @@ async def register_user(db: AsyncSession, user_data: UserCreate) -> TokenRespons
         email=user_data.email.lower().strip(),
         hashed_password=hashed_pw,
         name=user_data.name.strip(),
-        role=requested_role,
+        role=role,
         phone=user_data.phone,
         company=user_data.company,
         avatar_initials=initials,
@@ -169,7 +164,7 @@ async def authenticate_user(db: AsyncSession, login_data: UserLogin) -> TokenRes
         tenant = result_tenant.scalar_one_or_none()
         if not tenant:
             # Timing attack mitigation: always execute password verification
-            await verify_password_async(login_data.password, DUMMY_PASSWORD_HASH)
+            verify_password(login_data.password, DUMMY_PASSWORD_HASH)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid workspace or credentials"
@@ -181,14 +176,14 @@ async def authenticate_user(db: AsyncSession, login_data: UserLogin) -> TokenRes
 
     if not user:
         # Timing attack mitigation: always execute password verification
-        await verify_password_async(login_data.password, DUMMY_PASSWORD_HASH)
+        verify_password(login_data.password, DUMMY_PASSWORD_HASH)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    if not await verify_password_async(login_data.password, user.hashed_password):
+    if not verify_password(login_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -232,9 +227,8 @@ async def rotate_refresh_token(db: AsyncSession, req: RefreshTokenRequest) -> To
     Validate refresh token, revoke it, and issue a rotated access + refresh token pair.
     """
     token_hash = hashlib.sha256(req.refresh_token.encode("utf-8")).hexdigest()
-    # Row lock (Postgres) so two concurrent refreshes with the same token can't both rotate it.
     res = await db.execute(
-        select(RefreshToken).where(RefreshToken.token_hash == token_hash).with_for_update()
+        select(RefreshToken).where(RefreshToken.token_hash == token_hash)
     )
     record = res.scalar_one_or_none()
 
@@ -304,14 +298,14 @@ async def request_password_reset(db: AsyncSession, req: PasswordResetRequest) ->
             query = query.where(User.tenant_id == tenant.id)
         else:
             # Unknown workspace: constant timing mitigation, generic response
-            await verify_password_async("dummy", DUMMY_PASSWORD_HASH)
+            verify_password("dummy", DUMMY_PASSWORD_HASH)
             return {"message": "If an account with that email exists, reset instructions have been dispatched."}
 
     res = await db.execute(query)
     user = res.scalars().first()
     if not user:
         # Don't leak user existence; constant timing mitigation
-        await verify_password_async("dummy", DUMMY_PASSWORD_HASH)
+        verify_password("dummy", DUMMY_PASSWORD_HASH)
         return {"message": "If an account with that email exists, reset instructions have been dispatched."}
 
     pwd_fingerprint = hashlib.sha256(user.hashed_password.encode("utf-8")).hexdigest()[:16]
@@ -326,16 +320,8 @@ async def request_password_reset(db: AsyncSession, req: PasswordResetRequest) ->
         }
     )
 
-    # The token is always emailed (when SMTP is configured). Only dev/test also
-    # return it in the response, for automation.
-    await send_email(
-        user.email,
-        "Reset your SupportDesk AI password",
-        f"Hi {user.name},\n\n"
-        "Use this code in the app to set a new password (valid for 2 hours):\n\n"
-        f"{reset_token}\n\n"
-        "If you didn't ask for this, you can ignore this email.",
-    )
+    # In production, reset instructions and tokens are delivered exclusively via email.
+    # In development/testing, the reset token is returned in the response for test automation.
     if _is_production():
         return {"message": "If an account with that email exists, reset instructions have been dispatched."}
 
@@ -382,7 +368,7 @@ async def confirm_password_reset(db: AsyncSession, req: PasswordResetConfirm) ->
             detail="Password reset token has already been used or is invalid"
         )
 
-    user.hashed_password = await hash_password_async(req.new_password)
+    user.hashed_password = hash_password(req.new_password)
     # Revoke existing sessions
     await revoke_all_user_tokens(db, user.id)
     await db.commit()

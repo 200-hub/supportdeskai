@@ -452,3 +452,246 @@ def test_routing_safe_handling_when_no_agents(db_client):
     assert assign_res.status_code == 200
     # Returns valid response with assigned agent
     assert assign_res.json()["ticket_id"] == tid
+
+
+def test_routing_skills_based_matching_and_fallback(db_client):
+    slug = "skills-tenant"
+    db_client.post(
+        "/api/v1/auth/register",
+        json={"email": "skills_admin@test.com", "name": "Skills Admin", "password": "Password123!", "role": "admin", "tenant_slug": slug},
+    )
+    adm_token = db_client.post(
+        "/api/v1/auth/login",
+        json={"email": "skills_admin@test.com", "password": "Password123!", "tenant_slug": slug},
+    ).json()["access_token"]
+    headers = {"Authorization": f"Bearer {adm_token}"}
+
+    # Register Agent Billing
+    db_client.post(
+        "/api/v1/auth/register",
+        json={"email": "billing_agent@test.com", "name": "Billing Agent", "password": "Password123!", "role": "agent", "tenant_slug": slug},
+    )
+    billing_user_id = [u["id"] for u in db_client.get("/api/v1/tenants/users?role=agent", headers=headers).json() if u["email"] == "billing_agent@test.com"][0]
+    db_client.patch(f"/api/v1/tenants/users/{billing_user_id}", json={"skills_json": '["billing", "finance"]'}, headers=headers)
+
+    # Register Agent Technical
+    db_client.post(
+        "/api/v1/auth/register",
+        json={"email": "tech_agent@test.com", "name": "Tech Agent", "password": "Password123!", "role": "agent", "tenant_slug": slug},
+    )
+    tech_user_id = [u["id"] for u in db_client.get("/api/v1/tenants/users?role=agent", headers=headers).json() if u["email"] == "tech_agent@test.com"][0]
+    db_client.patch(f"/api/v1/tenants/users/{tech_user_id}", json={"skills_json": '["technical", "api"]'}, headers=headers)
+
+    # Create routing rule targeting "billing" skill
+    rule_res = db_client.post(
+        "/api/v1/routing/rules",
+        json={
+            "name": "Billing Inquiries Rule",
+            "strategy": "skills_based",
+            "required_skill": "billing",
+            "channel": "chat",
+            "priority_order": 1,
+        },
+        headers=headers,
+    )
+    assert rule_res.status_code == 201
+
+    # Create ticket matching chat channel
+    t_res = db_client.post(
+        "/api/v1/tickets/",
+        json={"subject": "Billing Question", "description": "Need invoice refund", "channel": "chat"},
+        headers=headers,
+    )
+    tid = t_res.json()["id"]
+
+    # Assign ticket -> should route specifically to Billing Agent
+    assign_res = db_client.post(f"/api/v1/routing/assign/{tid}", headers=headers)
+    assert assign_res.status_code == 200
+    assert assign_res.json()["assigned_to_id"] == billing_user_id
+
+    # Create rule with non-existent skill -> should fallback safely to any active agent
+    db_client.post(
+        "/api/v1/routing/rules",
+        json={
+            "name": "Hardware Special Rule",
+            "strategy": "skills_based",
+            "required_skill": "hardware_repairs",
+            "channel": "email",
+            "priority_order": 1,
+        },
+        headers=headers,
+    )
+    t_hw = db_client.post(
+        "/api/v1/tickets/",
+        json={"subject": "Broken Server", "description": "Hardware failure", "channel": "email"},
+        headers=headers,
+    )
+    hw_tid = t_hw.json()["id"]
+    assign_hw = db_client.post(f"/api/v1/routing/assign/{hw_tid}", headers=headers)
+    assert assign_hw.status_code == 200
+    assert assign_hw.json()["assigned_to_id"] in [billing_user_id, tech_user_id]
+
+
+def test_routing_priority_order_and_inactive_rules(db_client, auth_tokens):
+    headers = {"Authorization": f"Bearer {auth_tokens['admin']}"}
+
+    # Create low-priority rule (priority 10)
+    r10 = db_client.post(
+        "/api/v1/routing/rules",
+        json={"name": "Low Priority Web Rule", "strategy": "round_robin", "channel": "web", "priority_order": 10},
+        headers=headers,
+    ).json()
+
+    # Create high-priority rule (priority 2)
+    r2 = db_client.post(
+        "/api/v1/routing/rules",
+        json={"name": "High Priority Web Rule", "strategy": "least_loaded", "channel": "web", "priority_order": 2},
+        headers=headers,
+    ).json()
+
+    # Create ticket for web channel
+    t = db_client.post(
+        "/api/v1/tickets/",
+        json={"subject": "Web Help", "description": "Web question", "channel": "web"},
+        headers=headers,
+    ).json()
+
+    # Assign -> matches priority 2 rule (least_loaded)
+    assign1 = db_client.post(f"/api/v1/routing/assign/{t['id']}", headers=headers)
+    assert assign1.status_code == 200
+    assert assign1.json()["strategy_used"] == "least_loaded"
+
+    # Deactivate priority 2 rule
+    db_client.patch(f"/api/v1/routing/rules/{r2['id']}", json={"is_active": False}, headers=headers)
+
+    # Re-assign ticket -> now matches priority 10 rule (round_robin)
+    assign2 = db_client.post(f"/api/v1/routing/assign/{t['id']}", headers=headers)
+    assert assign2.status_code == 200
+    assert assign2.json()["strategy_used"] == "round_robin"
+
+
+def test_routing_channel_and_priority_validation(db_client, auth_tokens):
+    headers = {"Authorization": f"Bearer {auth_tokens['admin']}"}
+
+    # Invalid channel -> 422
+    bad_ch = db_client.post(
+        "/api/v1/routing/rules",
+        json={"name": "Bad Channel Rule", "strategy": "round_robin", "channel": "smoke_signal"},
+        headers=headers,
+    )
+    assert bad_ch.status_code == 422
+
+    # Invalid priority order (< 1) -> 422
+    bad_pri = db_client.post(
+        "/api/v1/routing/rules",
+        json={"name": "Bad Pri Rule", "strategy": "round_robin", "priority_order": 0},
+        headers=headers,
+    )
+    assert bad_pri.status_code == 422
+
+    # Create valid rule
+    valid_rule = db_client.post(
+        "/api/v1/routing/rules",
+        json={"name": "Valid Route Rule", "strategy": "round_robin", "priority_order": 1},
+        headers=headers,
+    ).json()
+
+    # Patch with invalid channel -> 422
+    patch_bad_ch = db_client.patch(
+        f"/api/v1/routing/rules/{valid_rule['id']}",
+        json={"channel": "morse_code"},
+        headers=headers,
+    )
+    assert patch_bad_ch.status_code == 422
+
+    # Patch with invalid priority -> 422
+    patch_bad_pri = db_client.patch(
+        f"/api/v1/routing/rules/{valid_rule['id']}",
+        json={"priority_order": -5},
+        headers=headers,
+    )
+    assert patch_bad_pri.status_code == 422
+
+
+def test_routing_deleted_or_invalid_target_team_handling(db_client, auth_tokens):
+    headers = {"Authorization": f"Bearer {auth_tokens['admin']}"}
+
+    # Create team
+    team_res = db_client.post("/api/v1/teams/", json={"name": "Temporary Team"}, headers=headers)
+    team_id = team_res.json()["id"]
+
+    # Create rule targeting this team
+    rule_res = db_client.post(
+        "/api/v1/routing/rules",
+        json={"name": "Temp Team Rule", "strategy": "round_robin", "target_team_id": team_id},
+        headers=headers,
+    )
+    assert rule_res.status_code == 201
+
+    # Delete the team
+    db_client.delete(f"/api/v1/teams/{team_id}", headers=headers)
+
+    # Create ticket
+    t = db_client.post(
+        "/api/v1/tickets/",
+        json={"subject": "Team Deleted Ticket", "description": "Target team was removed"},
+        headers=headers,
+    ).json()
+
+    # Auto-assign ticket -> does not crash or raise FK error, falls back to workspace agents safely
+    assign_res = db_client.post(f"/api/v1/routing/assign/{t['id']}", headers=headers)
+    assert assign_res.status_code == 200
+    assert assign_res.json()["assigned_to_id"] is not None
+
+
+def test_routing_ticket_lifecycle_auto_assign_integration(db_client, auth_tokens):
+    headers = {"Authorization": f"Bearer {auth_tokens['admin']}"}
+
+    # Ensure active routing rule exists
+    db_client.post(
+        "/api/v1/routing/rules",
+        json={"name": "Lifecycle Auto Rule", "strategy": "round_robin", "priority_order": 1, "is_active": True},
+        headers=headers,
+    )
+
+    # 1. Create ticket -> should be auto-assigned upon creation
+    t = db_client.post(
+        "/api/v1/tickets/",
+        json={"subject": "Auto Assigned on Create", "description": "Should have assignee immediately"},
+        headers=headers,
+    ).json()
+    assert t["assigned_to_id"] is not None
+
+    # 2. Unassign ticket
+    unassign_res = db_client.patch(f"/api/v1/tickets/{t['id']}", json={"assigned_to_id": None}, headers=headers)
+    assert unassign_res.status_code == 200
+    assert unassign_res.json()["assigned_to_id"] is None
+
+    # 3. Update ticket with auto_assign=True -> triggers routing engine
+    reassign_res = db_client.patch(f"/api/v1/tickets/{t['id']}", json={"auto_assign": True}, headers=headers)
+    assert reassign_res.status_code == 200
+    assert reassign_res.json()["assigned_to_id"] is not None
+
+
+def test_routing_cross_tenant_target_team_on_update(db_client, auth_tokens):
+    admin_a = {"Authorization": f"Bearer {auth_tokens['admin']}"}
+    agent_b = {"Authorization": f"Bearer {auth_tokens['tenant_b']}"}
+
+    # Tenant B creates a team
+    team_b = db_client.post("/api/v1/teams/", json={"name": "Tenant B Exclusive Team"}, headers=agent_b).json()
+
+    # Tenant A creates a routing rule
+    rule_a = db_client.post(
+        "/api/v1/routing/rules",
+        json={"name": "Tenant A Rule", "strategy": "round_robin"},
+        headers=admin_a,
+    ).json()
+
+    # Tenant A attempts to update rule targeting Tenant B's team -> 404 Not Found
+    patch_res = db_client.patch(
+        f"/api/v1/routing/rules/{rule_a['id']}",
+        json={"target_team_id": team_b["id"]},
+        headers=admin_a,
+    )
+    assert patch_res.status_code == 404
+

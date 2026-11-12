@@ -88,7 +88,7 @@ async def update_organization(
         stripped_name = org_in.name.strip()
         if len(stripped_name) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Organization name must be at least 2 characters",
             )
         org.name = stripped_name
@@ -261,7 +261,7 @@ async def update_contact(
         stripped_name = contact_in.name.strip()
         if len(stripped_name) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Contact name must be at least 2 characters",
             )
         contact.name = stripped_name

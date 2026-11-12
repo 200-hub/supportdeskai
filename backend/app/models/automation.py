@@ -75,8 +75,3 @@ class AutomationLog(Base, TimestampMixin):
     ticket_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(50), default="success", nullable=False)  # success, skipped, loop_prevented
     details_json: Mapped[str] = mapped_column(Text, default="{}", nullable=False)
-
-    @property
-    def details(self) -> dict:
-        import json
-        return json.loads(self.details_json) if self.details_json else {}

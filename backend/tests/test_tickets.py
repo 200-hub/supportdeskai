@@ -509,3 +509,35 @@ def test_ticket_customer_get_filters_internal_notes(db_client, auth_tokens):
     assert any(m["sender_type"] == "internal_note" for m in agent_ticket["messages"])
 
 
+
+
+def test_customer_reply_keeps_internal_notes_and_list_hides_them(db_client, auth_tokens):
+    cust_headers = {"Authorization": f"Bearer {auth_tokens['customer']}"}
+    agent_headers = {"Authorization": f"Bearer {auth_tokens['agent']}"}
+
+    tid = db_client.post(
+        "/api/v1/tickets/",
+        json={"subject": "Note survival", "description": "Customer inquiry"},
+        headers=cust_headers,
+    ).json()["id"]
+    db_client.post(
+        f"/api/v1/tickets/{tid}/messages",
+        json={"content": "Agent-only note", "sender_type": "internal_note"},
+        headers=agent_headers,
+    )
+
+    # Customer list must not leak the note
+    listed = db_client.get("/api/v1/tickets/?limit=100", headers=cust_headers).json()["tickets"]
+    mine = next(t for t in listed if t["id"] == tid)
+    assert not any(m["sender_type"] == "internal_note" for m in mine["messages"])
+
+    # A customer reply/update must not delete the hidden note
+    assert db_client.post(
+        f"/api/v1/tickets/{tid}/messages", json={"content": "Any update?"}, headers=cust_headers
+    ).status_code == 201
+    assert db_client.patch(
+        f"/api/v1/tickets/{tid}", json={"status": "closed"}, headers=cust_headers
+    ).status_code == 200
+
+    agent_msgs = db_client.get(f"/api/v1/tickets/{tid}/messages", headers=agent_headers).json()
+    assert any(m["sender_type"] == "internal_note" for m in agent_msgs)

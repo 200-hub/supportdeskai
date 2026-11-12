@@ -1,7 +1,6 @@
 import json
-from email.utils import parseaddr
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -73,7 +72,7 @@ def merge_channel_config(existing_json_str: Optional[str], new_json_str: Optiona
             raise ValueError()
     except Exception:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Channel config_json must be a valid JSON object string",
         )
 
@@ -109,7 +108,7 @@ async def create_channel(
     stripped_name = channel_in.name.strip()
     if len(stripped_name) < 2:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Channel name must be at least 2 characters",
         )
 
@@ -120,7 +119,7 @@ async def create_channel(
             raise ValueError()
     except Exception:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Channel config_json must be a valid JSON object string",
         )
 
@@ -189,7 +188,7 @@ async def update_channel(
         stripped_name = channel_in.name.strip()
         if len(stripped_name) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Channel name must be at least 2 characters",
             )
         channel.name = stripped_name
@@ -291,7 +290,7 @@ async def submit_public_form(
         await db.flush()
 
     # 2. Create Ticket from Form submission
-    ticket_id = f"SD-{uuid.uuid4().hex[:12].upper()}"
+    ticket_id = f"SD-{uuid.uuid4().hex[:4].upper()}"
     ticket = Ticket(
         id=ticket_id,
         tenant_id=form.tenant_id,
@@ -385,23 +384,13 @@ async def handle_inbound_email_webhook(
     if not tenant:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
 
-    # Generic JSON keys, plus Mailgun's inbound-route form fields
-    # ("sender", "From: Name <addr>", "body-plain", "stripped-text").
-    from_name, from_addr = parseaddr(payload.get("from") or payload.get("From") or "")
-    sender_email = (payload.get("sender") or from_addr or "unknown@sender.com").lower().strip()
-    sender_name = payload.get("from_name") or from_name or sender_email.split("@")[0]
-    subject = payload.get("subject") or payload.get("Subject") or "Email inquiry"
-    body = (
-        payload.get("text")
-        or payload.get("stripped-text")
-        or payload.get("body-plain")
-        or payload.get("html")
-        or payload.get("body-html")
-        or "Empty message body"
-    )
+    sender_email = payload.get("from", "unknown@sender.com").lower().strip()
+    sender_name = payload.get("from_name", sender_email.split("@")[0])
+    subject = payload.get("subject", "Email inquiry")
+    body = payload.get("text") or payload.get("html") or "Empty message body"
 
     # Create ticket for email
-    ticket_id = f"SD-{uuid.uuid4().hex[:12].upper()}"
+    ticket_id = f"SD-{uuid.uuid4().hex[:4].upper()}"
     ticket = Ticket(
         id=ticket_id,
         tenant_id=tenant.id,
@@ -427,81 +416,44 @@ async def handle_inbound_email_webhook(
     return {"status": "processed", "ticket_id": ticket.id}
 
 
-def _extract_whatsapp_messages(payload: Dict[str, Any]) -> List[Tuple[str, str, str]]:
-    """
-    Return ``(phone, display_name, text)`` for each inbound message.
-
-    Handles Meta's Cloud API shape
-    ``entry[].changes[].value.{contacts[], messages[]}`` and the legacy flat
-    ``{"from_phone", "message"}`` shape. Status-only events (delivered/read
-    receipts) yield nothing.
-    """
-    if "entry" not in payload:
-        if "from_phone" in payload or "message" in payload:
-            phone = payload.get("from_phone", "+10000000000")
-            return [(phone, "", payload.get("message", "WhatsApp message"))]
-        return []
-
-    out = []
-    for entry in payload.get("entry") or []:
-        for change in entry.get("changes") or []:
-            value = change.get("value") or {}
-            names = {
-                c.get("wa_id"): (c.get("profile") or {}).get("name", "")
-                for c in value.get("contacts") or []
-            }
-            for m in value.get("messages") or []:
-                phone = m.get("from", "")
-                mtype = m.get("type", "text")
-                if mtype == "text":
-                    text = (m.get("text") or {}).get("body", "")
-                else:
-                    caption = (m.get(mtype) or {}).get("caption", "") if isinstance(m.get(mtype), dict) else ""
-                    text = caption or f"[{mtype} message]"
-                out.append((phone, names.get(phone, ""), text or "WhatsApp message"))
-    return out
-
-
 async def handle_whatsapp_webhook(
     db: AsyncSession,
     tenant_slug: str,
     payload: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
-    Process inbound WhatsApp Business API webhook: one ticket per inbound message.
+    Process inbound WhatsApp Business API webhook.
     """
     res = await db.execute(select(Tenant).where(Tenant.slug == tenant_slug))
     tenant = res.scalar_one_or_none()
     if not tenant:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
 
-    messages = _extract_whatsapp_messages(payload)
-    if not messages:
-        # e.g. delivery/read receipts; acknowledge so Meta doesn't retry.
-        return {"status": "ignored", "ticket_id": None, "ticket_ids": []}
+    sender_phone = payload.get("from_phone", "+10000000000")
+    message_text = payload.get("message", "WhatsApp message")
 
-    ticket_ids = []
-    for sender_phone, display_name, message_text in messages:
-        ticket = Ticket(
-            id=f"SD-{uuid.uuid4().hex[:12].upper()}",
-            tenant_id=tenant.id,
-            subject=f"WhatsApp chat from {display_name or sender_phone}",
-            description=message_text,
-            category="WhatsApp Chat",
-            channel=TicketChannel.WHATSAPP,
-            status=TicketStatus.OPEN,
-            priority=TicketPriority.MEDIUM,
-        )
-        db.add(ticket)
-        await db.flush()
-        db.add(TicketMessage(
-            ticket_id=ticket.id,
-            sender_type=MessageSenderType.CUSTOMER,
-            sender_name=display_name or f"WhatsApp User ({sender_phone})",
-            content=message_text,
-        ))
-        ticket_ids.append(ticket.id)
+    ticket_id = f"SD-{uuid.uuid4().hex[:4].upper()}"
+    ticket = Ticket(
+        id=ticket_id,
+        tenant_id=tenant.id,
+        subject=f"WhatsApp chat from {sender_phone}",
+        description=message_text,
+        category="WhatsApp Chat",
+        channel=TicketChannel.WHATSAPP,
+        status=TicketStatus.OPEN,
+        priority=TicketPriority.MEDIUM,
+    )
+    db.add(ticket)
+    await db.flush()
+
+    msg = TicketMessage(
+        ticket_id=ticket.id,
+        sender_type=MessageSenderType.CUSTOMER,
+        sender_name=f"WhatsApp User ({sender_phone})",
+        content=message_text,
+    )
+    db.add(msg)
     await db.commit()
 
-    return {"status": "processed", "ticket_id": ticket_ids[0], "ticket_ids": ticket_ids}
+    return {"status": "processed", "ticket_id": ticket.id}
 

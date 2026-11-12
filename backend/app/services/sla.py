@@ -73,18 +73,18 @@ async def create_sla_policy(
     stripped_name = policy_in.name.strip()
     if len(stripped_name) < 2:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="SLA policy name must be at least 2 characters",
         )
     priority_lower = policy_in.priority.lower().strip()
     if priority_lower not in VALID_SLA_PRIORITIES:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Invalid priority '{policy_in.priority}'. Must be one of {list(VALID_SLA_PRIORITIES)}",
         )
     if policy_in.resolution_time_minutes < policy_in.first_response_time_minutes:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Resolution time minutes must be greater than or equal to first response time minutes",
         )
 
@@ -131,7 +131,7 @@ async def update_sla_policy(
         target_name = policy_in.name.strip()
         if len(target_name) < 2:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="SLA policy name must be at least 2 characters",
             )
         policy.name = target_name
@@ -143,7 +143,7 @@ async def update_sla_policy(
         p_lower = policy_in.priority.lower().strip()
         if p_lower not in VALID_SLA_PRIORITIES:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"Invalid priority '{policy_in.priority}'. Must be one of {list(VALID_SLA_PRIORITIES)}",
             )
         policy.priority = p_lower
@@ -153,7 +153,7 @@ async def update_sla_policy(
 
     if new_resol_mins < new_resp_mins:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Resolution time minutes must be greater than or equal to first response time minutes",
         )
 
