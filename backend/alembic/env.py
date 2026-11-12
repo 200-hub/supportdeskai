@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from pathlib import Path
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, inspect, pool, text
 
 # Ensure backend root directory is in sys.path
 backend_dir = Path(__file__).resolve().parent.parent
@@ -67,6 +67,14 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        # An unmerged branch shipped this same migration as c5d6e7f8a9b0; databases built from it
+        # already have these columns, so relabel them instead of failing with "Can't locate revision".
+        if inspect(connection).has_table("alembic_version"):
+            connection.execute(text(
+                "UPDATE alembic_version SET version_num = 'c7d8e9f0a1b2' WHERE version_num = 'c5d6e7f8a9b0'"
+            ))
+            connection.commit()
+
         context.configure(
             connection=connection,
             target_metadata=target_metadata
