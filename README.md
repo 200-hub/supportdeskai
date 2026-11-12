@@ -152,7 +152,9 @@ The code that exists today lives in two folders:
 
 Double-click **`Start SupportDesk.bat`**. It starts Docker Desktop if needed, runs the database and API
 in Docker, installs the app's packages on first run, and starts Expo with a QR code for Expo Go. The
-phone must be on the same Wi-Fi. **`Stop SupportDesk.bat`** stops it all; your data is kept.
+phone must be on the same Wi-Fi. It also creates three demo logins if they don't exist yet:
+`admin@demo.com`, `agent@demo.com` and `customer@demo.com`, all with password `Password123!`
+(workspace `default-tenant`). **`Stop SupportDesk.bat`** stops it all; your data is kept.
 You need Docker Desktop and Node.js installed; the launcher opens their download pages if they're missing.
 
 ### Run on a phone with Expo Go
